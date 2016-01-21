@@ -1,3 +1,8 @@
+TDTS04
+
+Matteus Laurent		matla782
+Oscar Petersson		oscpe262
+
 ====================
 1 Is your browser running HTTP version 1.0 or 1.1? What version of HTTP is the server running?
 ====================
@@ -131,13 +136,20 @@ Though the transfer of the .jpg began first once the .gif was done, the request 
 Task D: 
 ====================
 
+Initially, the browser simply requests a certain .html-file from the first server. The http-request is granted, and the .html file is transmitted in the data contents. While reading the file to display, 2 additional embedded objects are discovered. In automatic response, the browser establishes connections with the new servers and sends requests  for retrieval of these respective objects. It seems appearant that these requests happen in parallel and that the transfer of data packets need not be serial either.
+
 ====================
 20 What does the "Connection: close" and "Connection: Keep-alive" header field imply in HTTP protocol? When should one be used over the other?
 ====================
 
-"C: close" is telling the server to close the connection after sending the requested object, whereas "C: Keep-alive" keeps the connection open for further requests without having to reallocate TCP buffers and variables, which is more suitable where, for instace, multiple webpages resides on the same server.
+What does the "Connection: close" and "Connection: Keep-alive" header field imply in HTTP protocol? When should one be used over the other?
+"C: close" is telling the server to close the connection after sending the requested object, whereas "C: Keep-alive" keeps the connection open for further requests without having to reallocate TCP buffers and variables. Similarly, if the server sends "C: close", it tells the client that it will close the connection after sending the requested item.
+
+Keeping the connection alive is more suitable where, for instace, multiple webpages and objects resides on the same server, leading to multiple requests in succession/over a brief timespan. It's a good idea to close connections, especially from the server's perspective, if it needs to handle many single requests from different sources.
 
 ====================
-Task E: For questions 20, first write a brief but precise answer for each of the above questions, then write a paragraph explaining and discussing how these observations can be useful in the next assignment.
+Task E: 
 ====================
+
+Understanding the needs of the clients and the demands on the server lets us better choose how a server handles connections by default to meet delay/performance expectations.
 
