@@ -1,0 +1,77 @@
+== fixa git-repo, fortsätt == 
+
+1 Is your browser running HTTP version 1.0 or 1.1? What version of HTTP is the server running?
+Request Version: HTTP/1.1
+=> Browser running HTTP/1.1
+Response Phrase: OK
+=> Server running HTTP/1.1
+
+2 What languages (if any) does your browser indicate that it can accept to the server? In the captured session, what other information (if any) does the browser provide the server with regarding the user/browser?
+Languages: en-us and en 
+Other info: Browser version, accepted document types, charsets, and encodings, and time allowed to keep connection alive.
+
+3 What is the IP address of your computer? Of the gaia.cs.umass.edu server?
+local: 192.168.1.102 (GET Source)
+remote: 128.119.245.12 (GET Destination)
+
+4 What is the status code returned from the server to your browser?
+Status Code: 200
+(i.e. "OK")
+
+5 When was the HTML file that you are retrieving last modified at the server?
+Last-Modified: Tue, 23 Sep 2003 05:29:00 GMT
+
+6 How many bytes of content are being returned to your browser?
+Content-Length: 73
+
+7 By inspecting the raw data in the "packet bytes" pane, do you see any http headers within the data that are not displayed in the "packet details" pane? If so, name one.
+Nope, not in current version of Wireshark at least.
+
+8 Inspect the contents of the first HTTP GET request from your browser to the server. Do you see an “IF-MODIFIED-SINCE” line in the HTTP GET?
+Nope
+
+9 Inspect the contents of the server response. Did the server explicitly return the contents of the file? How can you tell?
+Yes, based on the status code (200), and the text data itself.
+
+10 Now inspect the contents of the second HTTP GET request from your browser to the server. Do you see an “IF-MODIFIED-SINCE:” line in the HTTP GET? If so, what information follows the “IF-MODIFIED-SINCE:” header?
+Yes
+If-Modified-Since: Tue, 23 Sep 2003 05:35:00 GMT
+
+11 What is the HTTP status code and phrase returned from the server in response to this second HTTP GET? Did the server explicitly return the contents of the file? Explain.
+304 (Not Modified). No explicit return of contents since the object has not been modified since "If-Modified-Since".
+
+Task B: For questions 8-11, first write a brief but precise answer for each of the above questions, then write a (combined) paragraph explaining and discussing your observations from the above practice questions. Note that your answer may benefit from explaining and/or referring to some of your observations explicitly.
+The first time a page is fetched, the page is returned along with a "Last-Modified" time stamp. Further fetching of the page a comparison  is made between "Last-Modified" and "IF-MODIFIED-SINCE" to decide if the entire page should be returned anew (SC 200) or if the locally cached page should be used (SC 304).
+
+12 How many HTTP GET request messages were sent by your browser?
+One (1)
+
+13 How many data-containing TCP segments were needed to carry the single HTTP response?
+Four (4) data-containing segments.
+
+14 What is the status code and phrase associated with the response to the HTTP GET request?
+200 OK
+
+15 Is there any HTTP header information in the transmitted data associated with TCP segmentation? For this question you may want to think about at what layer each protocol operates, and how the protocols at the different layers interoperate.
+
+
+Task C: For questions 12-15, first write a brief but precise answer for each of the above questions, then write a (combined) paragraph explaining and discussing your observations from the above practice questions. Note that your answer may benefit from explaining and/or referring to some of your observations explicitly.
+
+16 How many HTTP GET request messages were sent by your browser? To which Internet addresses were these GET requests sent?
+
+17 Can you tell whether your browser downloaded the two images serially, or whether they were downloaded from the two web sites in parallel? Explain.
+
+Task D: For questions 16-17, first write a brief but precise answer for each of the above questions, then write a paragraph explaining and discussing your observations from the above practice questions. Note that your answer may benefit from explaining and/or referring to some of your observations explicitly.
+
+===
+Practice questions (not to be answered explicitly):
+
+18 What is the server’s response (status code and phrase) in response to the initial HTTP GET message from your browser?
+19 When your browser sends the HTTP GET message for the second time, what new field is included in the HTTP GET message?
+
+You will not need to report answers for questions 18-19; however, please feel free to write a paragraph explaining and discussing your observations from the above practice questions.
+===
+
+20 What does the "Connection: close" and "Connection: Keep-alive" header field imply in HTTP protocol? When should one be used over the other?
+
+Task E: For questions 20, first write a brief but precise answer for each of the above questions, then write a paragraph explaining and discussing how these observations can be useful in the next assignment.
