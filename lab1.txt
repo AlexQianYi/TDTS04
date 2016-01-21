@@ -1,5 +1,3 @@
-== fixa git-repo, fortsätt == 
-
 1 Is your browser running HTTP version 1.0 or 1.1? What version of HTTP is the server running?
 Request Version: HTTP/1.1
 => Browser running HTTP/1.1
@@ -29,6 +27,9 @@ Nope, not in current version of Wireshark at least.
 
 Task A: For questions 1-7, first write a brief but precise answer for each of the above questions, then write a (combined) paragraph explaining and discussing your observations from the above practice questions. Note that your answer may benefit from explaining and/or referring to some of your observations explicitly.
 
+The HTTP request/response interaction between the end systems is built on messages containing request|status line, header lines and an entity body. 
+The r|s line holds the specific request/status (i.e. GET <this>, <Status integer><Basic status description>).
+The header lines hold broader information regarding how the client/server are allowed to interact with each other (time stamps, conditions regarding caching, connection timeout intervalls, encodings, etc.), and the entity body is used for content transfer.
 
 8 Inspect the contents of the first HTTP GET request from your browser to the server. Do you see an “IF-MODIFIED-SINCE” line in the HTTP GET?
 Nope
@@ -44,6 +45,7 @@ If-Modified-Since: Tue, 23 Sep 2003 05:35:00 GMT
 304 (Not Modified). No explicit return of contents since the object has not been modified since "If-Modified-Since".
 
 Task B: For questions 8-11, first write a brief but precise answer for each of the above questions, then write a (combined) paragraph explaining and discussing your observations from the above practice questions. Note that your answer may benefit from explaining and/or referring to some of your observations explicitly.
+
 The first time a page is fetched, the page is returned along with a "Last-Modified" time stamp. Further fetching of the page a comparison  is made between "Last-Modified" and "IF-MODIFIED-SINCE" to decide if the entire page should be returned anew (SC 200) or if the locally cached page should be used (SC 304).
 
 12 How many HTTP GET request messages were sent by your browser?
@@ -59,7 +61,7 @@ Four (4) data-containing segments.
 No. The segmentation is in this case done on ethernet level, where the MTU (maximal transmission unit) is 1500 B (plus header), and subsequently the next layers fill the ethernet packets' capacity accordingly.
 
 Task C: For questions 12-15, first write a brief but precise answer for each of the above questions, then write a (combined) paragraph explaining and discussing your observations from the above practice questions. Note that your answer may benefit from explaining and/or referring to some of your observations explicitly.
-
+Communication between end systems take place in different layers. The HTTP messages are encapsulated in TCP packets, which in turn are encapsulated in IP packets, which are encapsulated in Ethernet packets, which finally are transferred in frames as bytes on wire. Each of these "containers" have limits in size with Ethernet having the smallest MTU of the ones mentioned. Larger amount of data is subsequently in need of being segmented to fit into the Ethernet container. 
 
 16 How many HTTP GET request messages were sent by your browser? To which Internet addresses were these GET requests sent?
 3 GET request messages, 128.119.245.12 (html), 165.193.123.218 (gif), 134.241.6.82 (jpg)
