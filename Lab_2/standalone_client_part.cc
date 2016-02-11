@@ -79,6 +79,9 @@ int main(int argc, char *argv[])
     return 4;
   }
   
+  if (send(sock_fd, "This is a test message!", 22, 0) == -1)
+    perror("send");
+
   inet_ntop(p->ai_family, get_in_addr((struct sockaddr *)p->ai_addr),
 	    s, sizeof s);
   printf("client: connecting to %s\n", s);
