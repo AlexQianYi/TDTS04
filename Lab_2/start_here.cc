@@ -180,9 +180,13 @@ int main(int argc, char* argv[])
 
 	// LEAVE THE WEBCLIENT HANGING YO
 
-	if(send(new_fd, "Successfully received message.", 30, 0) == -1)
-	  perror("send");
+	//if(send(new_fd, "Successfully received message.", 30, 0) == -1)
+	//  perror("send");
 
+	// strlen() counts up until, not including, the '\0'
+	if(send(new_fd, buf, strlen(buf), 0) == -1) 
+	  perror("send");
+	
 	close(new_fd);
 	exit(0);
 
