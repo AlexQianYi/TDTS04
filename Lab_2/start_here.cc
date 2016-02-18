@@ -22,7 +22,7 @@
  */
       
 #define BACKLOG 10   // size of queue for pending connections
-#define MAXDATASIZE 1514 // max number of bytes we can get at once
+#define MAXDATASIZE 15000 // max number of bytes we can get at once
 
 using namespace std;
     
