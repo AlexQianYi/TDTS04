@@ -24,6 +24,7 @@
       
 #define BACKLOG 10   // size of queue for pending connections
 #define MAXDATASIZE 15000 // max number of bytes we can get at once
+#define HUGEDATASIZE 8000000 // temporary measure
 #define STDSERVPORT "80" // Webserver service port
 
 using namespace std;
@@ -170,6 +171,7 @@ int main(int argc, char* argv[])
       close(sock_fd);
       do_child_stuff(new_fd);
 
+      cout << "Closing connection on " << s << ':' << argv[1] << ".\n";
       close(new_fd);
       exit(0);
      
@@ -186,8 +188,8 @@ int main(int argc, char* argv[])
 
 int do_child_stuff(int clientproxy_fd)
 {
-  int proxyserver_fd, numbytes;
-  char buf[MAXDATASIZE];
+  int proxyserver_fd, numbytes, numbytes2;
+  char buf[MAXDATASIZE], buf2[HUGEDATASIZE];
   struct addrinfo hints, *servinfo, *p;
   int rv;
   char s[INET6_ADDRSTRLEN];
@@ -198,36 +200,34 @@ int do_child_stuff(int clientproxy_fd)
 
   // Receive HTTP message from client.
   if ((numbytes = recv(clientproxy_fd, buf, MAXDATASIZE-1, 0)) == -1) {
-    perror("Child: recv");
-    exit(1);
+    perror("Child: recv from client");
+    return 1;
   }
   
   if ( numbytes == 0 ) {
     perror("number of bytes received was 0");
-    return 1;
+    return 2;
   }
 
+  // Determine the Host
   string temp (buf, numbytes);
   size_t pos { temp.find("\r\nHost: ") };
   const char *csaddress;
 
   if( pos == string::npos ) {
     perror("no Host: header in HTTP message");
-    return 2;
+    return 3;
   }
 
   pos = pos + 8;
-
   size_t lastpos { temp.find("\r\n", pos) };
-
   csaddress = (temp.substr(pos, lastpos-pos)).c_str();
-
   cout << "(DEBUG) Host:.::"<< csaddress << "::.\n";
 
   // Get the address info. Port 80 for webserver.
   if ((rv = getaddrinfo(csaddress, STDSERVPORT, &hints, &servinfo)) != 0) {
     fprintf(stderr, "Child: getaddrinfo(): %s\n", gai_strerror(rv));
-    return 3;
+    return 4;
   }
 
   // Loop through servinfo and connect
@@ -251,7 +251,7 @@ int do_child_stuff(int clientproxy_fd)
 
   if (p == nullptr) {
     fprintf(stderr, "Child: failed to connect to server\n");
-    return 4;
+    return 5;
   }
   
   inet_ntop(p->ai_family, get_in_addr((struct sockaddr *)p->ai_addr),
@@ -260,14 +260,45 @@ int do_child_stuff(int clientproxy_fd)
   cout << "Proxy has connected to " << s << " on port " << STDSERVPORT << ".\n";
 
   // Forward our message
-  if (send(proxyserver_fd, buf, numbytes, 0) == -1)
-    perror("Child: send");
+  if (send(proxyserver_fd, buf, numbytes, 0) == -1) {
+    perror("Child: send to server");
+    return 6;
+  }
 
   buf[numbytes] = '\0';
 
   cout << "Sent message:\n" << buf << "\n";
 
+  int recv_count;
+
+  while(1) {
+
+    if ((numbytes2 = recv(proxyserver_fd, buf2, HUGEDATASIZE-1, 0)) == -1) {
+      perror("Child: recv from server");
+      return 7;
+    }
+
+    if (numbytes2 == 0) {
+      continue;
+    }
+
+    buf2[numbytes2] = '\0';
+
+    cout << "(" << ++recv_count << ") Received message from " << csaddress << ":\n" << buf2 << "\n";
+
+  
+    //if (send(clientproxy_fd, buf2, numbytes2, 0) == -1) {
+    //  perror("Child: send back to client");
+    //  return 8;
+    //}
+  
+  
+  }
+
+
+
   cout << "Closing connection on " << s << ':' << STDSERVPORT << ".\n";
+  close(proxyserver_fd);
 
   return 0;
 }
