@@ -269,8 +269,22 @@ int do_child_stuff(int clientproxy_fd)
 
   cout << "Sent message:\n" << buf << "\n";
 
-  int recv_count;
+  int recv_count {};
 
+
+
+  /*
+   * Hantera buffstorlek? Hur stor bör bufferten vara? Vi behöver vänta på hela "objektet" (klar med samtliga recv()) innan vi kan "send" till client? FRÅÅÅÅGAAA!
+   * När vi har HTTP headern (slutar med \r\n\r\n + Content-length i bufferten så vet vi att vi har fått hela "objektet" och kan skicka vidare den.
+   * when numbytes > header & content length, recv(bla, bla,  headerl+contentl, 0)
+   */
+
+
+
+
+
+
+  /*
   while(1) {
 
     if ((numbytes2 = recv(proxyserver_fd, buf2, HUGEDATASIZE-1, 0)) == -1) {
@@ -295,7 +309,7 @@ int do_child_stuff(int clientproxy_fd)
   
   }
 
-
+  */
 
   cout << "Closing connection on " << s << ':' << STDSERVPORT << ".\n";
   close(proxyserver_fd);
