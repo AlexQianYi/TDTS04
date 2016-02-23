@@ -12,6 +12,7 @@
 #include <signal.h>
 #include <string>
 #include <iostream>
+#include <algorithm>
 
 /*
  * 1. errno?
@@ -215,15 +216,29 @@ int do_child_stuff(int clientproxy_fd)
     perror("Child: recv from client");
     return 1;
   }
+
+  cout << "GET request from browser client: \n" << string(buf, numbytes) << "\n"; // DEBUGGING LINE
   
   if ( numbytes == 0 ) {
     perror("number of bytes received from browser was 0");
     return 2;
   }
+  
+  const string httpreq (buf, numbytes);
+  
+  // Filter GET line.
 
+  size_t pos { httpreq.find("\r\n") };
+  string temp { httpreq.substr(0, pos) };
+
+  transform(temp.begin(), temp.end(), temp.begin(), ::tolower);
+  
+  //  if( temp. 
+  
   // Determine the Host
-  const string temp (buf, numbytes);
-  size_t pos { temp.find("\r\nHost: ") };
+  
+  cout << "This is the httpreq string:\n" << httpreq << "\n"; // DEBUGGING LINE
+  pos = httpreq.find("\r\nHost: ");
   const char *csaddress;
 
   if (pos == string::npos) {
@@ -232,9 +247,16 @@ int do_child_stuff(int clientproxy_fd)
   }
 
   pos = pos + 8;
-  size_t lastpos { temp.find("\r\n", pos) };
-  csaddress = (temp.substr(pos, lastpos-pos)).c_str();
+  size_t lastpos { httpreq.find("\r\n", pos) };
+
+  cout << "Pos: " << pos << "   Lastpos: " << lastpos << "\n"; // DEBUGGING LINE
+
+  temp = httpreq.substr(pos, lastpos-pos);
+  csaddress = temp.c_str();
   cout << "(DEBUG) Host:.::" << csaddress << "::.\n";
+
+
+  
 
   // Get the address info. Port 80 for webserver.
   if ((rv = getaddrinfo(csaddress, STDSERVPORT, &hints, &servinfo)) != 0) {
@@ -244,15 +266,15 @@ int do_child_stuff(int clientproxy_fd)
   
   // Change Connection-header value to close
   //               0 1 23456789*123
-  pos = temp.find("\r\nConnection: ");
+  pos = httpreq.find("\r\nConnection: ");
 
   if (pos == string::npos) {
     printf("Child: could not find a connection header in the GET request.\n");
   }
   else {
     pos = pos + 14;
-    lastpos = temp.find("\r\n", pos);
-    cout << "(DEBUG) raw::Connection:.::" << temp.substr(pos, lastpos-pos) << "::.\n";
+    lastpos = httpreq.find("\r\n", pos);
+    cout << "(DEBUG) raw::Connection:.::" << httpreq.substr(pos, lastpos-pos) << "::.\n";
     memmove(buf+pos+5, buf+lastpos, numbytes-lastpos);
     memcpy(buf+pos, "close", 5); // strcpy would invite its unpopular friend, Slash-Zero.
     numbytes = numbytes - (lastpos-pos) + 5;
@@ -312,18 +334,16 @@ int do_child_stuff(int clientproxy_fd)
   cout << buf+numbytes-10 << "This row.\n";
   // /SOME DEBUGGING
 
-  int whirrwhirr{};  
-
+  
   // Receive response from server
-  while ((numbytes = recv(proxyserver_fd, buf, MAXDATASIZE-1, 0)) != -1) {
-
-    if (numbytes == 0)
-      break;
-
+ int whirrwhirr{}; 
+  
+  while ((numbytes = recv(proxyserver_fd, buf, MAXDATASIZE-1, 0)) != -1
+	 && numbytes != 0) {
     memcpy(buf2+numbytes2, buf, numbytes);
     numbytes2 += numbytes;
-    cout << ++whirrwhirr << "\n";
-    cout << string(buf, numbytes) << "\n";
+    ++whirrwhirr;
+    cout << string(buf, numbytes) << "\n"; // DEBUGGING LINE
   }
   
   if (numbytes != 0) {
@@ -334,93 +354,19 @@ int do_child_stuff(int clientproxy_fd)
     printf("Received no TCP data.\n");
       }
   else {
-    for ( int i {} ; i < numbytes2 ; ++i )
-      {
-	if (buf2[i] == '\0')
-	  buf2[i] = '0';
-      }
-    buf2[numbytes2] = '\0';
-    cout << "Received response:\n" << buf2 << "\n ... in "
+    cout << "Received response:\n" << string(buf2, numbytes2) << "\n ... in "
 	 << whirrwhirr << " receives of total " << numbytes2 << " bytes.\n";
   }
+
   
-
-
-
-
-
-
-  // GÖR HEADERCHANGE CONNECTION: [Keep-Alive] -> [Close] ISTÄLLET
-  
-  /*
-   * Hantera buffstorlek? Hur stor bör bufferten vara? Vi behöver vänta på hela "objektet" (klar med samtliga recv()) innan vi kan "send" till client? FRÅÅÅÅGAAA!
-   * När vi har HTTP headern (slutar med \r\n\r\n + Content-length i bufferten så vet vi att vi har fått hela "objektet" och kan skicka vidare den.
-   * when numbytes > header & content length, recv(bla, bla,  headerl+contentl, 0)
-   */
-
-  /* while (headerlength == -1 || contentlength == -1) {
-
-
-
-
- 
-  while (totalbytes != contentlength + headerlength) {
-
-
-
-    if ((numbytes = recv(proxyserver_fd, buf, MAXDATASIZE-1, 0)) == -1) {
-      perror("Child: receive server response");
-      return 7;
-    }
-
-
-
-
-    }*/
-
-
-
-/*
- * Hitta Content-length och \r\n\r\n
- */
-
   // Forward response to client  
-  /* if (send(clientproxy_fd, buf2, numbytes2, 0) == -1) {
+  if (send(clientproxy_fd, buf2, numbytes2, 0) == -1) {
     perror("Child: send back to client");
     return 8;
-    }*/
-  
-
-
- 
-
-
-
-
-
-  /*
-  while(1) {
-
-    if ((numbytes2 = recv(proxyserver_fd, buf2, HUGEDATASIZE-1, 0)) == -1) {
-      perror("Child: recv from server");
-      return 7;
-    }
-
-    if (numbytes2 == 0) {
-      continue;
-    }
-
-    buf2[numbytes2] = '\0';
-
-    cout << "(" << ++recv_count << ") Received message from " << csaddress << ":\n" << buf2 << "\n";
-
-  
-    
-  
-  
   }
 
-  */
+
+  
 
   cout << "Closing connection on " << s << ':' << STDSERVPORT << ".\n";
   close(proxyserver_fd);
