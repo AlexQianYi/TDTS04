@@ -206,6 +206,9 @@ int do_child_stuff(int clientproxy_fd)
   struct addrinfo hints, *servinfo, *p;
   int rv;
   char s[INET6_ADDRSTRLEN];
+
+  string response302 {"HTTP/1.1 302 Found\r\nLocation: http://www.ida.liu.se/~TDTS04/labs/2011/ass2/error1.html\r\n\r\n"};
+  size_t r302_ienr {80};
   
   memset(&hints, 0, sizeof hints);
   hints.ai_family = AF_UNSPEC;
@@ -227,14 +230,41 @@ int do_child_stuff(int clientproxy_fd)
   const string httpreq (buf, numbytes);
   
   // Filter GET line.
-
   size_t pos { httpreq.find("\r\n") };
   string temp { httpreq.substr(0, pos) };
 
   transform(temp.begin(), temp.end(), temp.begin(), ::tolower);
+  temp.erase(remove_if(temp.begin(), temp.end(), [](char a)->bool{ return a == '+'; }),
+	     temp.end()); // remove <space>
+  pos = 0;
+  while ((pos = temp.find("%20", pos)) != string::npos) { // remove <space>
+    temp.erase(pos, 3);
+  }
+  pos = 0;
+  while ((pos = temp.find("%c3%b6", pos)) != string::npos) { // ö - mind the tolower function
+    temp.replace(pos, 6, "o");
+  }
+  pos = 0;
+  while ((pos = temp.find("%c3%96", pos)) != string::npos) { // Ö - mind the tolower function
+    temp.replace(pos, 6, "o");
+  }
   
-  //  if( temp. 
-  
+  if (temp.find("spongebob") != string::npos ||
+      temp.find("britneyspears") != string::npos ||
+      temp.find("parishilton") != string::npos ||
+      temp.find("norrkoping") != string::npos) {
+
+    response302.at(r302_ienr) = '1';
+
+    if (send(clientproxy_fd, response302.data(), response302.length(), 0) == -1) {
+      perror("Child: 302 send back to client");
+      return 8;
+    }
+    else {
+      return 0;
+    }
+  }
+
   // Determine the Host
   
   cout << "This is the httpreq string:\n" << httpreq << "\n"; // DEBUGGING LINE
