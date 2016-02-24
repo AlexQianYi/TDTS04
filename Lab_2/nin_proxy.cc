@@ -15,6 +15,12 @@
 #include <algorithm>
 
 /*
+ * http video site: video.wired.com
+ * Not send whole http objects?:
+ *     "The reason is that to search the content, you need to store the whole content (at least in a straightforward implementation) which severely limits the ability of your proxy to handle delivery of large files. "
+ */
+
+/*
  * 1. errno?
  * 2. waitpid?
  * 3. WNOHANG?
@@ -258,7 +264,7 @@ int do_child_stuff(int clientproxy_fd)
 
     if (send(clientproxy_fd, response302.data(), response302.length(), 0) == -1) {
       perror("Child: 302 send back to client");
-      return 8;
+      return 3;
     }
     else {
       return 0;
@@ -269,11 +275,11 @@ int do_child_stuff(int clientproxy_fd)
   
   cout << "This is the httpreq string:\n" << httpreq << "\n"; // DEBUGGING LINE
   pos = httpreq.find("\r\nHost: ");
-  const char *csaddress;
+  const char *csaddress; // <-- string saddress
 
   if (pos == string::npos) {
     perror("no Host: header in HTTP message");
-    return 3;
+    return 4;
   }
 
   pos = pos + 8;
@@ -281,17 +287,17 @@ int do_child_stuff(int clientproxy_fd)
 
   cout << "Pos: " << pos << "   Lastpos: " << lastpos << "\n"; // DEBUGGING LINE
 
-  temp = httpreq.substr(pos, lastpos-pos);
-  csaddress = temp.c_str();
-  cout << "(DEBUG) Host:.::" << csaddress << "::.\n";
+  temp = httpreq.substr(pos, lastpos-pos); // <-- saddress
+  csaddress = temp.c_str(); // cut
+  cout << "(DEBUG) Host:.::" << csaddress << "::.\n"; // <-- saddress
 
 
   
 
   // Get the address info. Port 80 for webserver.
-  if ((rv = getaddrinfo(csaddress, STDSERVPORT, &hints, &servinfo)) != 0) {
+  if ((rv = getaddrinfo(csaddress, STDSERVPORT, &hints, &servinfo)) != 0) { // <-- saddress.data()
     fprintf(stderr, "Child: getaddrinfo(): %s\n", gai_strerror(rv));
-    return 4;
+    return 5;
   }
   
   // Change Connection-header value to close
@@ -331,7 +337,7 @@ int do_child_stuff(int clientproxy_fd)
 
   if (p == nullptr) {
     fprintf(stderr, "Child: failed to connect to server\n");
-    return 5;
+    return 6;
   }
   
   inet_ntop(p->ai_family, get_in_addr((struct sockaddr *)p->ai_addr),
@@ -342,7 +348,7 @@ int do_child_stuff(int clientproxy_fd)
   // Forward our message
   if (send(proxyserver_fd, buf, numbytes, 0) == -1) {
     perror("Child: send to server");
-    return 6;
+    return 7;
   }
 
   buf[numbytes] = '\0';
@@ -378,7 +384,7 @@ int do_child_stuff(int clientproxy_fd)
   
   if (numbytes != 0) {
     perror("Child: recieve server response\n");
-    return 7;
+    return 8;
   }
   else if (numbytes2 == 0) {
     printf("Received no TCP data.\n");
@@ -388,16 +394,38 @@ int do_child_stuff(int clientproxy_fd)
 	 << whirrwhirr << " receives of total " << numbytes2 << " bytes.\n";
   }
 
-  
+  // Filter response
+  string sresponse (buf2, numbytes2);
+  string sresponseheader (sresponse, 0, sresponse.find("\r\n\r\n"));
+
+  cout << "Response header DEBUG:\n" << sresponseheader << "\n";
+
+  if (sresponseheader.find("Content-Type: text") != string::npos &&
+      sresponseheader.find("Content-Encoding: gzip") == string::npos) {
+    
+    if (sresponse.find("SpongeBob") != string::npos ||
+	sresponse.find("Britney Spears") != string::npos ||
+	sresponse.find("Paris Hilton") != string::npos ||
+	sresponse.find("Norrköping") != string::npos) {
+      response302.at(r302_ienr) = '2';
+
+      if (send(clientproxy_fd, response302.data(), response302.length(), 0) == -1) {
+	perror("Child: 302 send back to client");
+	return 9;
+      }
+      else {
+	return 0;
+      }
+    }
+  }
+    
   // Forward response to client  
   if (send(clientproxy_fd, buf2, numbytes2, 0) == -1) {
     perror("Child: send back to client");
-    return 8;
+    return 10;
   }
 
-
-  
-
+  // Done with child session
   cout << "Closing connection on " << s << ':' << STDSERVPORT << ".\n";
   close(proxyserver_fd);
 
