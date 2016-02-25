@@ -39,6 +39,49 @@ Included in the <Net Ninny Proxy .tar.gz> (to be named):
 
 
 "What to Deliver: Provide a careful description of the testing of the proxy, ..."
+Tests were done in three different environments (variables listed as <browser, client network, proxy network>, where localhost means that the proxy was run on the same machine as the browser):
+
+1) Firefox, LiU, localhost
+2) Firefox, ComHem, localhost
+3) Firefox, ComHem, Bahnhof
+
+
+Functionality tests:
+a) http://www.ida.liu.se/~TDTS04/labs/2011/ass2/goodtest1.txt
+b) http://www.ida.liu.se/~TDTS04/labs/2011/ass2/goodtest2.html
+c) http://www.ida.liu.se/~TDTS04/labs/2011/ass2/SpongeBob.html
+d) http://www.ida.liu.se/~TDTS04/labs/2011/ass2/badtest1.html
+e) http://www.stackoverflow.com
+f) http://www.aftonbladet.se
+g) http://www.svd.se
+h) http://www.bbc.com
+i) http://google.com searching blacklisted words
+j) ###http://somevideosite over http?
+k) http://swedbank.se #tests forced https << Errör!
+
+The tests (a-d) tests basic functionality with text/HTML/url filtering, tests (e-h) aim to test average functionality on a set of commonly used sites. Test (i) is aimed specifically to test googling of the blacklisted words, (j) to test streaming video functionality and (k) to test enforced https ###andwhyitdoesntwork###.
+
+Test\Env   1	 2     3
+--------+-----+-----+-----+	   	
+   a    |  p  |  p  |  p  |
+   b    |  p  |  p  |  p  |
+   c    |  p  |  p  |  p  |
+   d    |  p  |  p  |  p  |
+   e    |  p  |  p  |  p  |
+   f    |  p  |  p  |  f  |
+   g    |  p  |  p  |  f  |
+   h    |  p  |  p  |  p  |
+   i    |  p  |  p  |  p  |
+   j    |  f  |  f  |    |
+   k    |  f  |  f  |  f  |
+--------+-----+-----+-----+
+
+Download various pages that you would expect a regular user accessing. For example, the TAs suggest that a reasonable list to test first could include stackoverflow.com, aftonbladet.se, svd.se, liu.se, qz.com, and bbc.com.
+Some website may force use of HTTPS. Try to identify popular websites that do, as well as websites that do not. Check how your proxy handles both types. (Again, you do not have to relay requests over HTTPS through the proxy, but your proxy need to work properly and not crash when running into websites that use HTTPS.)
+Test if you can go to www.google.com or www.google.se when proxy is ON. Type the words to be blocked in Google. Can your proxy filter the data? If not, why?
+Test if you can visit www.youtube.com and watch the YouTube homepage as you would see when proxy is OFF. Regrdless if it work or does not work, determine the reason for why it works and not work. It is important to understand the limitations of your proxy.
+Test other streaming services (e.g., vimeo and dailymotion) and see if you spot any differences. What streaming services, if any, does your proxy handle properly? Try to explain your findings, by asking why and why not questions.
+You could also visit www.wikipedia.com and search for blocked keyword. Can you filter the data? If not, why?
 
 (To be filled out with development testing and final version testing?)
 
@@ -46,6 +89,6 @@ Included in the <Net Ninny Proxy .tar.gz> (to be named):
 
 The proxy only handles HTTP requests. The proxy filters URL and plain uncompressed text content for certain keywords. In current state (probably because of child session limitation of 8M-sized buffer), the proxy does not handle video streaming over HTTP. The proxy only filters content based on transmission from server to client. A modified-since request that is redirected to a cache will only filter if the cache is not local and uses HTTP communication. The proxy allows for the host to reuse the bound port upon process termination.
 
-"What to Deliver: Finally, please list, summarize, and discuss how ..."
+"What to Deliver: Finally, please list, summarize, and discuss how your proxy handle different website types, including both streaming and non-streaming websites that use (or not use) HTTPS and gzip, for example. (Include example websites here.)"
 
 (-)
