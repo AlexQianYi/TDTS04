@@ -82,6 +82,66 @@ Test\Env   1	 2     3     4
    k    |  f  |  f  |  f  |    |
 --------+-----+-----+-----+----+
 
+%%%
+http://swedbank.se:
+
+Proxy is listening on port 8080.
+Awaiting connections...
+server: got connection from 127.0.0.1
+GET request from browser client: 
+GET http://www.swedbank.se/ HTTP/1.1
+Host: www.swedbank.se
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:44.0) Gecko/20100101 Firefox/44.0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate
+DNT: 1
+Connection: keep-alive
+
+
+This is the httpreq string:
+GET http://www.swedbank.se/ HTTP/1.1
+Host: www.swedbank.se
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:44.0) Gecko/20100101 Firefox/44.0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate
+DNT: 1
+Connection: keep-alive
+
+
+Pos: 44   Lastpos: 59
+(DEBUG) Host:.::www.swedbank.se::.
+(DEBUG) raw::Connection:.::keep-alive::.
+Proxy has connected to 164.10.48.26 on port 80.
+Sent message:
+GET http://www.swedbank.se/ HTTP/1.1
+Host: www.swedbank.se
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:44.0) Gecko/20100101 Firefox/44.0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate
+DNT: 1
+Connection: close
+
+
+Received response:
+HTTP/1.0 302 Found
+Location: https://www.swedbank.sehttp://www.swedbank.se/
+Connection: close
+Content-Length: 0
+
+
+ ... in 1 receives of total 118 bytes.
+Response header DEBUG:
+HTTP/1.0 302 Found
+Location: https://www.swedbank.sehttp://www.swedbank.se/
+Connection: close
+Content-Length: 0
+Closing connection on 164.10.48.26:80.
+Closing connection on 127.0.0.1:8080.
+%%%
+
 
 (To be filled out with development testing and final version testing?)
 
