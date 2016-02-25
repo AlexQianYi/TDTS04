@@ -52,7 +52,6 @@
      - Receive until header end "\r\n\r\n".
      - Look for Content-Type: text and the lack of Content-Encoding: gzip
      - If, collect the whole response in a buffer and filter. If not, send as we receive.
- * - 2.2. HUGEDATASIZE IS a limit. At the moment, we do not handle child sessions larger than this.
  */
 
 
@@ -270,7 +269,7 @@ int do_child_stuff(int clientproxy_fd)
     return 1;
   }
 
-  // cout << "GET request from browser client: \n" << string(buf, numbytes) << "\n"; // DEBUGGING LINE
+  cout << "GET request from browser client: \n" << string(buf, numbytes) << "\n"; // DEBUGGING LINE
   
   if ( numbytes == 0 ) {
     perror("number of bytes received from browser was 0");
@@ -316,10 +315,11 @@ int do_child_stuff(int clientproxy_fd)
   }
 
   // Determine the Host
-  string saddress;  
-
-  //cout << "This is the httpreq string:\n" << httpreq << "\n"; // DEBUGGING LINE
+  
+  cout << "This is the httpreq string:\n" << httpreq << "\n"; // DEBUGGING LINE
   pos = httpreq.find("\r\nHost: ");
+  //  const char *csaddress; // <-- string saddress
+  string saddress;
 
   if (pos == string::npos) {
     perror("no Host: header in HTTP message");
@@ -329,13 +329,17 @@ int do_child_stuff(int clientproxy_fd)
   pos = pos + 8;
   size_t lastpos { httpreq.find("\r\n", pos) };
 
-  // cout << "Pos: " << pos << "   Lastpos: " << lastpos << "\n"; // DEBUGGING LINE
+  cout << "Pos: " << pos << "   Lastpos: " << lastpos << "\n"; // DEBUGGING LINE
 
-  saddress = httpreq.substr(pos, lastpos-pos);
-  //cout << "(DEBUG) Host:.::" << saddress << "::.\n";
+  /*temp*/ saddress = httpreq.substr(pos, lastpos-pos); // <-- saddress
+  //  csaddress = temp.c_str(); // cut
+  cout << "(DEBUG) Host:.::" << /*c*/saddress << "::.\n"; // <-- saddress
+
+
+  
 
   // Get the address info. Port 80 for webserver.
-  if ((rv = getaddrinfo(saddress.data(), STDSERVPORT, &hints, &servinfo)) != 0) {
+  if ((rv = getaddrinfo(/*csaddress*/saddress.data(), STDSERVPORT, &hints, &servinfo)) != 0) { // <-- saddress.data()
     fprintf(stderr, "Child: getaddrinfo(): %s\n", gai_strerror(rv));
     return 5;
   }
@@ -350,7 +354,7 @@ int do_child_stuff(int clientproxy_fd)
   else {
     pos = pos + 14;
     lastpos = httpreq.find("\r\n", pos);
-    //cout << "(DEBUG) raw::Connection:.::" << httpreq.substr(pos, lastpos-pos) << "::.\n";
+    cout << "(DEBUG) raw::Connection:.::" << httpreq.substr(pos, lastpos-pos) << "::.\n";
     memmove(buf+pos+5, buf+lastpos, numbytes-lastpos);
     memcpy(buf+pos, "close", 5); // strcpy would invite its unpopular friend, Slash-Zero.
     numbytes = numbytes - (lastpos-pos) + 5;
@@ -383,7 +387,7 @@ int do_child_stuff(int clientproxy_fd)
   inet_ntop(p->ai_family, get_in_addr((struct sockaddr *)p->ai_addr),
 	    s, sizeof s);
   freeaddrinfo(servinfo);
-  //cout << "Proxy has connected to " << s << " on port " << STDSERVPORT << ".\n";
+  cout << "Proxy has connected to " << s << " on port " << STDSERVPORT << ".\n";
 
   // Forward our message
   if (send(proxyserver_fd, buf, numbytes, 0) == -1) {
@@ -393,7 +397,23 @@ int do_child_stuff(int clientproxy_fd)
 
   buf[numbytes] = '\0';
 
-  //cout << "Sent message:\n" << buf << "\n";
+  cout << "Sent message:\n" << buf << "\n";
+
+  /* SOME DEBUGGING
+  if (buf[numbytes] == '\0')
+    cout << "buf[numbytes]: is a \\0\n";
+  if (buf[numbytes-1] == '\n')
+    cout << "buf[numbytes-1]: is a \\n\n";
+  if (buf[numbytes-2] == '\r')
+    cout << "buf[numbytes-2]: is a \\r\n";
+  if (buf[numbytes-3] == '\n')
+    cout << "buf[numbytes-3]: is a \\n\n";
+  if (buf[numbytes-4] == '\r')
+    cout << "buf[numbytes-4]: is a \\r\n";
+
+  cout << buf+numbytes-10 << "This row.\n";
+  // /SOME DEBUGGING */
+
   
   // Receive response from server
  int whirrwhirr{}; 
@@ -403,7 +423,7 @@ int do_child_stuff(int clientproxy_fd)
     memcpy(buf2+numbytes2, buf, numbytes);
     numbytes2 += numbytes;
     ++whirrwhirr;
-    // cout << string(buf, numbytes) << "\n"; // DEBUGGING LINE
+    cout << string(buf, numbytes) << "\n"; // DEBUGGING LINE
   }
   
   if (numbytes != 0) {
@@ -414,15 +434,15 @@ int do_child_stuff(int clientproxy_fd)
     printf("Received no TCP data.\n");
       }
   else {
-    //cout << "Received response:\n" << string(buf2, numbytes2) << "\n ... in "
-    //	 << whirrwhirr << " receives of total " << numbytes2 << " bytes.\n";
+    cout << "Received response:\n" << string(buf2, numbytes2) << "\n ... in "
+	 << whirrwhirr << " receives of total " << numbytes2 << " bytes.\n";
   }
 
   // Filter response
   string sresponse (buf2, numbytes2);
   string sresponseheader (sresponse, 0, sresponse.find("\r\n\r\n"));
 
-  //cout << "Response header DEBUG:\n" << sresponseheader << "\n";
+  cout << "Response header DEBUG:\n" << sresponseheader << "\n";
 
   if (sresponseheader.find("Content-Type: text") != string::npos &&
       sresponseheader.find("Content-Encoding: gzip") == string::npos) {

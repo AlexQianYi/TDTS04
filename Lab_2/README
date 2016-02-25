@@ -1,0 +1,51 @@
+Source code structure:
+
+/*** CODE STRUCTURE: ***
+ *
+ * help function declarations
+ *
+ * INT MAIN *
+ * - <7> Command argument
+ * - <7> Setup of listening socket
+ * --- getaddrinfo()
+ * --- loop through results and bind
+ * - Sigaction settings
+ * - Listening loop
+ * --- <2> Listen, report and fork children -> do_child_stuff()
+ *
+ * do_child_stuff() *
+ * - <2> Receive HTTP message from client 
+ * - <3> FILTER the request 
+ * - <2> Determine the host 
+ * - <2> Get address info of server 
+ * - <2> Modify Connection-header
+ * - <2> Loop through results and connect 
+ * - <2> Forward request to server 
+ * - (Hopefully) receive response from server
+ * - <8> FILTER the response
+ * - Forward the response to client
+ * - End child session
+ */
+
+// Supplement with requirements specification point <6>
+
+
+Included in the <Net Ninny Proxy .tar.gz> (to be named):
+
+* The source code: nin_proxy.cc
+* Makefile. Compile with 'make ninnyproxy'.
+* Run Net Ninny Proxy using the command:
+      ninnyproxy <desired proxy port number to specify for browser>
+
+
+"What to Deliver: Provide a careful description of the testing of the proxy, ..."
+
+(To be filled out with development testing and final version testing?)
+
+"What to Deliver: Provide a summary of what your proxy-based service can and cannot do. ..."
+
+The proxy only handles HTTP requests. The proxy filters URL and plain uncompressed text content for certain keywords. In current state (probably because of child session limitation of 8M-sized buffer), the proxy does not handle video streaming over HTTP. The proxy only filters content based on transmission from server to client. A modified-since request that is redirected to a cache will only filter if the cache is not local and uses HTTP communication. The proxy allows for the host to reuse the bound port upon process termination.
+
+"What to Deliver: Finally, please list, summarize, and discuss how ..."
+
+(-)
