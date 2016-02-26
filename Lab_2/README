@@ -15,10 +15,11 @@ Source code structure:
  *
  * do_child_stuff() *
  * - <2> Receive HTTP message from client 
- * - <3> FILTER the request 
  * - <2> Determine the host 
- * - <2> Get address info of server 
+ * - <3> FILTER the request 
+ * - <> Change the GET/POST line
  * - <2> Modify Connection-header
+ * - <2> Get address info of server 
  * - <2> Loop through results and connect 
  * - <2> Forward request to server 
  * - (Hopefully) receive response from server
@@ -46,7 +47,7 @@ the same machine as the browser):
 1) Firefox, LiU, localhost
 2) Firefox, ComHem, localhost
 3) Firefox, ComHem, Bahnhof
-4) 
+4) Firefox, LiU, Bahnhof
 
 
 ## FUNCTIONALITY TESTS: ##
@@ -67,20 +68,20 @@ The tests (a-d) tests basic functionality with text/HTML/url filtering, tests
 is aimed specifically to test googling of the blacklisted words, (j) to test
 streaming video functionality and (k) to test enforced https.
 
-Test\Env   1	 2     3     4
---------+-----+-----+-----+-----+
-   a    |  p  |  p  |  p  |    |
-   b    |  p  |  p  |  p  |    |
-   c    |  p  |  p  |  p  |    |
-   d    |  p  |  p  |  p  |    |
-   e    |  p  |  p  |  p  |    |
-   f    |  p  |  p  |  f  |    |
-   g    |  p  |  p  |  f  |    |
-   h    |  p  |  p  |  p  |    |
-   i    |  p  |  p  |  p  |    |
-   j    |  f  |  f  |  f  |    |
-   k    |  f  |  f  |  f  |    |
---------+-----+-----+-----+----+
+Test\Env   1	 2     3     4	   5  
+--------+-----+-----+-----+-----+-----+
+   a    |  p  |  p  |  p  |  p  |    |
+   b    |  p  |  p  |  p  |  p  |    |
+   c    |  p  |  p  |  p  |  p  |    |
+   d    |  p  |  p  |  p  |  p  |    |
+   e    |  p  |  p  |  p  |  p  |    |
+   f    |  p  |  p  |  f  |  f  |    |
+   g    |  p  |  p  |  f  |  f  |    |
+   h    |  p  |  p  |  p  |  p  |    |
+   i    |  p  |  p  |  p  |  p  |    |
+   j    |  f  |  f  |  f  |  f  |    |
+   k    |  f  |  f  |  f  |  f  |    |
+--------+-----+-----+-----+-----+-----+
 
 %%%
 http://swedbank.se:
@@ -142,6 +143,8 @@ Closing connection on 164.10.48.26:80.
 Closing connection on 127.0.0.1:8080.
 %%%
 
+## KNOWN ISSUES ##
+* Redirection issue: Examples - "svd.se" >> "www.svd.se", "http://www.swedbank.se" >> "https://www.swedbank.se"
 
 (To be filled out with development testing and final version testing?)
 

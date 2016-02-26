@@ -424,6 +424,9 @@ int do_child_stuff(int clientproxy_fd)
   
   while ((numbytes = recv(proxyserver_fd, buf, MAXDATASIZE-1, 0)) != -1
 	 && numbytes != 0) {
+    if (numbytes2 + numbytes >= HUGEDATASIZE) {
+      break;
+    }
     memcpy(buf2+numbytes2, buf, numbytes);
     numbytes2 += numbytes;
     ++whirrwhirr;
