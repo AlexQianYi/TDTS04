@@ -256,53 +256,71 @@ int do_child_stuff(int clientproxy_fd)
   struct addrinfo hints, *servinfo, *p;
   int rv;
   char s[INET6_ADDRSTRLEN];
-
+  size_t pos, lastpos;
   string response302 {"HTTP/1.1 302 Found\r\nLocation: http://www.ida.liu.se/~TDTS04/labs/2011/ass2/error1.html\r\n\r\n"};
-  size_t r302_ienr {80};
+  const size_t r302_ienr {80};
   
   memset(&hints, 0, sizeof hints);
   hints.ai_family = AF_UNSPEC;
   hints.ai_socktype = SOCK_STREAM;
 
   // Receive HTTP message from client.
+  string httpreq;
+  
   if ((numbytes = recv(clientproxy_fd, buf, MAXDATASIZE-1, 0)) == -1) {
     perror("Child: recv from client");
     return 1;
   }
-
-  // cout << "GET request from browser client: \n" << string(buf, numbytes) << "\n"; // DEBUGGING LINE
   
   if ( numbytes == 0 ) {
     perror("number of bytes received from browser was 0");
     return 2;
   }
   
-  const string httpreq (buf, numbytes);
+  httpreq = string(buf, numbytes);
+  //cout << "GET request from browser client: \n" << httpreq << "\n"; // DEBUGGING LINE
+  
+  // Determine the Host
+  string shostaddress;  
+  
+  pos = httpreq.find("\r\nHost: ");
+  
+  if (pos == string::npos) {
+    perror("no Host: header in HTTP message");
+    return 4;
+  }
+  
+  pos = pos + 8;
+  lastpos = httpreq.find("\r\n", pos); 
+  // cout << "Pos: " << pos << "   Lastpos: " << lastpos << "\n"; // DEBUGGING LINE 
+  shostaddress = httpreq.substr(pos, lastpos-pos);
+  cout << "(DEBUG) Host:.::" << shostaddress << "::.\n";
+
   
   // Filter the request.
-  size_t pos { httpreq.find("\r\n") };
-  string temp { httpreq.substr(0, pos) };
+  pos = httpreq.find("\r\n");
+  string filterline { shostaddress + httpreq.substr(0, pos) };
 
-  transform(temp.begin(), temp.end(), temp.begin(), ::tolower);
-  temp.erase(remove_if(temp.begin(), temp.end(), [](char a)->bool{ return a == '+'; }),
-	     temp.end()); // remove <space>
+  transform(filterline.begin(), filterline.end(), filterline.begin(), ::tolower);
+  filterline.erase(remove_if(filterline.begin(), filterline.end(), [](char a)->bool{ return a == '+'; }),
+	     filterline.end()); // remove <space>
   pos = 0;
-  while ((pos = temp.find("%20", pos)) != string::npos) { // remove <space>
-    temp.erase(pos, 3);
+  while ((pos = filterline.find("%20", pos)) != string::npos) { // remove <space>
+    filterline.erase(pos, 3);
   }
   pos = 0;
-  while ((pos = temp.find("%c3%b6", pos)) != string::npos) { // ö - mind the tolower function
-    temp.replace(pos, 6, "o");
+  while ((pos = filterline.find("%c3%b6", pos)) != string::npos) { // ö - mind the tolower function
+    filterline.replace(pos, 6, "o");
   }
   pos = 0;
-  while ((pos = temp.find("%c3%96", pos)) != string::npos) { // Ö - mind the tolower function
-    temp.replace(pos, 6, "o");
+  while ((pos = filterline.find("%c3%96", pos)) != string::npos) { // Ö - mind the tolower function
+    filterline.replace(pos, 6, "o");
   }
   
-  if (temp.find("spongebob") != string::npos ||
-      temp.find("britneyspears") != string::npos ||
-      temp.find("parishilton") != string::npos ||
-      temp.find("norrkoping") != string::npos) {
+  if (filterline.find("spongebob") != string::npos ||
+      filterline.find("britneyspears") != string::npos ||
+      filterline.find("parishilton") != string::npos ||
+      filterline.find("norrkoping") != string::npos) {
 
     response302.at(r302_ienr) = '1';
 
@@ -315,27 +333,10 @@ int do_child_stuff(int clientproxy_fd)
     }
   }
 
-  // Determine the Host
-  string saddress;  
-
-  //cout << "This is the httpreq string:\n" << httpreq << "\n"; // DEBUGGING LINE
-  pos = httpreq.find("\r\nHost: ");
-
-  if (pos == string::npos) {
-    perror("no Host: header in HTTP message");
-    return 4;
-  }
-
-  pos = pos + 8;
-  size_t lastpos { httpreq.find("\r\n", pos) };
-
-  // cout << "Pos: " << pos << "   Lastpos: " << lastpos << "\n"; // DEBUGGING LINE
-
-  saddress = httpreq.substr(pos, lastpos-pos);
-  //cout << "(DEBUG) Host:.::" << saddress << "::.\n";
+  // Change the GET/POST line path to not include the host name
 
   // Get the address info. Port 80 for webserver.
-  if ((rv = getaddrinfo(saddress.data(), STDSERVPORT, &hints, &servinfo)) != 0) {
+  if ((rv = getaddrinfo(shostaddress.data(), STDSERVPORT, &hints, &servinfo)) != 0) {
     fprintf(stderr, "Child: getaddrinfo(): %s\n", gai_strerror(rv));
     return 5;
   }
@@ -412,7 +413,8 @@ int do_child_stuff(int clientproxy_fd)
   }
   else if (numbytes2 == 0) {
     printf("Received no TCP data.\n");
-      }
+    return 9;
+  }
   else {
     //cout << "Received response:\n" << string(buf2, numbytes2) << "\n ... in "
     //	 << whirrwhirr << " receives of total " << numbytes2 << " bytes.\n";
@@ -435,7 +437,7 @@ int do_child_stuff(int clientproxy_fd)
 
       if (send(clientproxy_fd, response302.data(), response302.length(), 0) == -1) {
 	perror("Child: 302 send back to client");
-	return 9;
+	return 10;
       }
       else {
 	return 0;
@@ -446,7 +448,7 @@ int do_child_stuff(int clientproxy_fd)
   // Forward response to client  
   if (send(clientproxy_fd, buf2, numbytes2, 0) == -1) {
     perror("Child: send back to client");
-    return 10;
+    return 11;
   }
 
   // Done with child session
