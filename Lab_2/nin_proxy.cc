@@ -104,14 +104,14 @@ void *get_in_addr(struct sockaddr *sa)
 int main(int argc, char* argv[])
 {
   if (!(argc == 2 || argc == 3)) {
-    fprintf(stderr,"Correct command to start program: NetNinny <port number>\n");
+    fprintf(stderr,"Correct command to start program: ninnyproxy <port number>\n");
     return 1;
   }
  
   bool debug {false}; 
   if (argc == 3) {
     if (string(argv[2]) != "-debug") {
-      fprintf(stderr,"Correct command to start program: NetNinny <port number>\n");
+      fprintf(stderr,"Correct command to start program: ninnyproxy <port number>\n");
       return 1;
     }
     debug = true;
@@ -264,6 +264,7 @@ int do_child_stuff(int clientproxy_fd)
   hints.ai_family = AF_UNSPEC;
   hints.ai_socktype = SOCK_STREAM;
 
+
   // Receive HTTP message from client.
   string httpreq;
   
@@ -280,6 +281,7 @@ int do_child_stuff(int clientproxy_fd)
   httpreq = string(buf, numbytes);
   //cout << "GET request from browser client: \n" << httpreq << "\n"; // DEBUGGING LINE
   
+
   // Determine the Host
   string shostaddress;  
   
@@ -287,7 +289,7 @@ int do_child_stuff(int clientproxy_fd)
   
   if (pos == string::npos) {
     perror("no Host: header in HTTP message");
-    return 4;
+    return 3;
   }
   
   pos = pos + 8;
@@ -326,36 +328,56 @@ int do_child_stuff(int clientproxy_fd)
 
     if (send(clientproxy_fd, response302.data(), response302.length(), 0) == -1) {
       perror("Child: 302 send back to client");
-      return 3;
+      return 4;
     }
     else {
       return 0;
     }
   }
+  
 
   // Change the GET/POST line path to not include the host name
-
-  // Get the address info. Port 80 for webserver.
-  if ((rv = getaddrinfo(shostaddress.data(), STDSERVPORT, &hints, &servinfo)) != 0) {
-    fprintf(stderr, "Child: getaddrinfo(): %s\n", gai_strerror(rv));
+  if ((lastpos = httpreq.find("HTTP/")) == string::npos) {
+    perror("Child: no HTTP version in the client request");
     return 5;
   }
+
+  if ((pos = httpreq.substr(0, lastpos).find("http://")) != string::npos) {
+    lastpos = httpreq.find('/', pos+7);
+    numbytes = numbytes - (lastpos - pos);
+    httpreq.erase(pos, lastpos - pos);
+  }
+
   
   // Change Connection-header value to close
-  //                  0 1 23456789*123
-  pos = httpreq.find("\r\nConnection: ");
-
-  if (pos == string::npos) {
+  //                       0 1 23456789*123
+  if ((pos = httpreq.find("\r\nConnection: ")) == string::npos) {
     printf("Child: could not find a connection header in the GET request.\n");
   }
   else {
     pos = pos + 14;
     lastpos = httpreq.find("\r\n", pos);
-    //cout << "(DEBUG) raw::Connection:.::" << httpreq.substr(pos, lastpos-pos) << "::.\n";
-    memmove(buf+pos+5, buf+lastpos, numbytes-lastpos);
-    memcpy(buf+pos, "close", 5); // strcpy would invite its unpopular friend, Slash-Zero.
     numbytes = numbytes - (lastpos-pos) + 5;
+    //cout << "(DEBUG) raw::Connection:.::" << httpreq.substr(pos, lastpos-pos) << "::.\n";
+    // memmove(buf+pos+5, buf+lastpos, numbytes-lastpos);
+    //memcpy(buf+pos, "close", 5); // strcpy would invite its unpopular friend, Slash-Zero.
+    httpreq.replace(pos, lastpos - pos, "close");
   }
+
+  if (numbytes != httpreq.length()) {
+    cout << "WARNING WARNING" << "\n";
+    exit(1);
+  }
+
+  //cout << "Modified GET request:\n" << httpreq << "\n"; // DEBUG line
+
+
+  // Get the address info. Port 80 for webserver.
+  if ((rv = getaddrinfo(shostaddress.data(), STDSERVPORT, &hints, &servinfo)) != 0) {
+    fprintf(stderr, "Child: getaddrinfo(): %s\n", gai_strerror(rv));
+    return 6;
+  }
+ 
 
   // Loop through servinfo and connect
   for (p = servinfo ; p != nullptr ; p = p->ai_next) {
@@ -378,7 +400,7 @@ int do_child_stuff(int clientproxy_fd)
 
   if (p == nullptr) {
     fprintf(stderr, "Child: failed to connect to server\n");
-    return 6;
+    return 7;
   }
   
   inet_ntop(p->ai_family, get_in_addr((struct sockaddr *)p->ai_addr),
@@ -386,16 +408,17 @@ int do_child_stuff(int clientproxy_fd)
   freeaddrinfo(servinfo);
   //cout << "Proxy has connected to " << s << " on port " << STDSERVPORT << ".\n";
 
+
   // Forward our message
-  if (send(proxyserver_fd, buf, numbytes, 0) == -1) {
+  if (send(proxyserver_fd, &(httpreq.front()), numbytes, 0) == -1) {
     perror("Child: send to server");
-    return 7;
+    return 8;
   }
 
-  buf[numbytes] = '\0';
-
+  //buf[numbytes] = '\0';
   //cout << "Sent message:\n" << buf << "\n";
   
+
   // Receive response from server
  int whirrwhirr{}; 
   
@@ -409,16 +432,17 @@ int do_child_stuff(int clientproxy_fd)
   
   if (numbytes != 0) {
     perror("Child: recieve server response\n");
-    return 8;
+    return 9;
   }
   else if (numbytes2 == 0) {
     printf("Received no TCP data.\n");
-    return 9;
+    return 10;
   }
   else {
     //cout << "Received response:\n" << string(buf2, numbytes2) << "\n ... in "
     //	 << whirrwhirr << " receives of total " << numbytes2 << " bytes.\n";
   }
+
 
   // Filter response
   string sresponse (buf2, numbytes2);
@@ -437,7 +461,7 @@ int do_child_stuff(int clientproxy_fd)
 
       if (send(clientproxy_fd, response302.data(), response302.length(), 0) == -1) {
 	perror("Child: 302 send back to client");
-	return 10;
+	return 11;
       }
       else {
 	return 0;
@@ -445,11 +469,13 @@ int do_child_stuff(int clientproxy_fd)
     }
   }
     
+
   // Forward response to client  
   if (send(clientproxy_fd, buf2, numbytes2, 0) == -1) {
     perror("Child: send back to client");
-    return 11;
+    return 12;
   }
+
 
   // Done with child session
   cout << "Closing connection on " << s << ':' << STDSERVPORT << ".\n";
