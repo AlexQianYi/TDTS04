@@ -29,39 +29,34 @@
  *
  * do_child_stuff() *
  * - <2> Receive HTTP message from client 
- * - <3> FILTER the request 
  * - <2> Determine the host 
- * - <2> Get address info of server 
+ * - <3> FILTER the request 
+ * - <6> Change the GET/POST line
  * - <2> Modify Connection-header
+ * - <2> Get address info of server 
  * - <2> Loop through results and connect 
  * - <2> Forward request to server 
- * - (Hopefully) receive response from server
+ * - (Hopefully) receive response from server  [RCV]
  * - <8> FILTER the response
  * - Forward the response to client
  * - End child session
  */
 
-// Supplement with requirements specification point <6>
-
-
-/*** FOR DEMONSTRATION: ***
- * 1. http video site: video.wired.com
- * 2. Not send whole http objects?:
- *     "The reason is that to search the content, you need to store the whole content (at least in a straightforward implementation) which severely limits the ability of your proxy to handle delivery of large files. "
- * - 2.1. If 2, there is an argument to be made for only allocating a big buffer whenever we are to filter. Receive-loop could be split in two parts:
+/*** Notes about shortcomings of the proxy: ***
+ * 1. Currently, our proxy tries to receive all the data associated with the response to one GET-request before forwarding it back to the client.
+ * - 1.1. We only really need to work against a large buffer when we are to filter. Our current implementation ([RCV]) of the receive-loop should be split in two parts:
      - Receive until header end "\r\n\r\n".
      - Look for Content-Type: text and the lack of Content-Encoding: gzip
-     - If, collect the whole response in a buffer and filter. If not, send as we receive.
- * - 2.2. HUGEDATASIZE IS a limit. At the moment, we do not handle child sessions larger than this.
+     - If, collect the whole response in a buffer and filter. If not, enter a different send-receive-loop that sends as we receive.
+ * 2. The proxy does not modify the Accept-Encoding header.
+   - This leads to receiving some text content compressed, obstructing the proxy's ability to filter.
+ * 3. The proxy is not optimized for receiving Chrome/Chromium GET-requests.
+   - This problem manifests itself in how the proxy handles the Connection header. It only tries to change the value of the connection header to close, rather than adding one in the absence of one.
+   - This means browsing with the proxy in Chrome/Chromium results in the child having to wait for timeouts before forwarding all (due to our current implementation) server responses.
  */
 
 
-/*** "I guess it does dem stuffs": ***
- * 1. errno
- * 2. waitpid
- * 3. WNOHANG?
- * 4. sigaction
- */
+
       
 #define BACKLOG 10   // size of queue for pending connections
 #define MAXDATASIZE 15000 // max number of bytes we can get at once
@@ -103,18 +98,9 @@ void *get_in_addr(struct sockaddr *sa)
  * ***********/
 int main(int argc, char* argv[])
 {
-  if (!(argc == 2 || argc == 3)) {
+  if (!(argc == 2)) {
     fprintf(stderr,"Correct command to start program: ninnyproxy <port number>\n");
     return 1;
-  }
- 
-  bool debug {false}; 
-  if (argc == 3) {
-    if (string(argv[2]) != "-debug") {
-      fprintf(stderr,"Correct command to start program: ninnyproxy <port number>\n");
-      return 1;
-    }
-    debug = true;
   }
 
   int argv_1 { stoi(argv[1]) };
@@ -248,7 +234,6 @@ int main(int argc, char* argv[])
 
 
 
-
 int do_child_stuff(int clientproxy_fd)
 {
   int proxyserver_fd, numbytes{}, numbytes2{};
@@ -296,7 +281,7 @@ int do_child_stuff(int clientproxy_fd)
   lastpos = httpreq.find("\r\n", pos); 
   // cout << "Pos: " << pos << "   Lastpos: " << lastpos << "\n"; // DEBUGGING LINE 
   shostaddress = httpreq.substr(pos, lastpos-pos);
-  cout << "(DEBUG) Host:.::" << shostaddress << "::.\n";
+  // cout << "(DEBUG) Host:.::" << shostaddress << "::.\n"; // DEBUGGING LINE
 
   
   // Filter the request.
@@ -353,23 +338,23 @@ int do_child_stuff(int clientproxy_fd)
   //                       0 1 23456789*123
   if ((pos = httpreq.find("\r\nConnection: ")) == string::npos) {
     printf("Child: could not find a connection header in the GET request.\n");
+    // Here should be code that implements adding a Connection: Close header"
   }
   else {
     pos = pos + 14;
     lastpos = httpreq.find("\r\n", pos);
     numbytes = numbytes - (lastpos-pos) + 5;
     //cout << "(DEBUG) raw::Connection:.::" << httpreq.substr(pos, lastpos-pos) << "::.\n";
-    // memmove(buf+pos+5, buf+lastpos, numbytes-lastpos);
-    //memcpy(buf+pos, "close", 5); // strcpy would invite its unpopular friend, Slash-Zero.
     httpreq.replace(pos, lastpos - pos, "close");
   }
 
-  if (numbytes != httpreq.length()) {
+  // Used for making sure numbytes variable was updated correctly. Could be left in.
+  /*if (numbytes != httpreq.length()) { 
     cout << "WARNING WARNING" << "\n";
     exit(1);
-  }
+    }*/
 
-  //cout << "Modified GET request:\n" << httpreq << "\n"; // DEBUG line
+  //cout << "Modified GET request:\n" << httpreq << "\n"; // DEBUGGING LINE
 
 
   // Get the address info. Port 80 for webserver.
@@ -406,7 +391,7 @@ int do_child_stuff(int clientproxy_fd)
   inet_ntop(p->ai_family, get_in_addr((struct sockaddr *)p->ai_addr),
 	    s, sizeof s);
   freeaddrinfo(servinfo);
-  //cout << "Proxy has connected to " << s << " on port " << STDSERVPORT << ".\n";
+  //cout << "Proxy has connected to " << s << " on port " << STDSERVPORT << ".\n"; // DEBUGGING LINE
 
 
   // Forward our message
@@ -414,13 +399,10 @@ int do_child_stuff(int clientproxy_fd)
     perror("Child: send to server");
     return 8;
   }
-
-  //buf[numbytes] = '\0';
-  //cout << "Sent message:\n" << buf << "\n";
   
 
-  // Receive response from server
- int whirrwhirr{}; 
+  // Receive response from server [RCV]
+  int whirrwhirr{}; 
   
   while ((numbytes = recv(proxyserver_fd, buf, MAXDATASIZE-1, 0)) != -1
 	 && numbytes != 0) {
@@ -442,8 +424,8 @@ int do_child_stuff(int clientproxy_fd)
     return 10;
   }
   else {
-    //cout << "Received response:\n" << string(buf2, numbytes2) << "\n ... in "
-    //	 << whirrwhirr << " receives of total " << numbytes2 << " bytes.\n";
+    //cout << "Received response:\n" << string(buf2, numbytes2) << "\n ... in " // DEBUGGING LINE
+    //	 << whirrwhirr << " receives of total " << numbytes2 << " bytes.\n"; // DEBUGGING LINE
   }
 
 
@@ -451,7 +433,7 @@ int do_child_stuff(int clientproxy_fd)
   string sresponse (buf2, numbytes2);
   string sresponseheader (sresponse, 0, sresponse.find("\r\n\r\n"));
 
-  //cout << "Response header DEBUG:\n" << sresponseheader << "\n";
+  //cout << "Response header:\n" << sresponseheader << "\n"; // DEBUGGING LINE
 
   if (sresponseheader.find("Content-Type: text") != string::npos &&
       sresponseheader.find("Content-Encoding: gzip") == string::npos) {
