@@ -33,7 +33,8 @@ Included in the <NetNinny.tar.gz> archive:
 * Makefile. Compile with 'make ninnyproxy'.
 * Run Net Ninny Proxy using the command:
       ninnyproxy <desired proxy port number to specify for browser>
-* Configure your web browser to fetch http data through 127.0.0.1 and your
+      
+Configure your web browser to fetch http data through 127.0.0.1 and your
       selected port.
 
 
@@ -97,8 +98,9 @@ The proxy only filters content based on transmission from server to client. A
   modified-since request that is redirected to a cache will only filter if the
   cache is not local and uses HTTP communication.
 The proxy allows for the host to reuse the bound port upon process termination.
-The Proxy currently can't filter gzipped content, but might be included in a
-  future version.
+The Proxy currently can't filter gzipped conten.
+
+Shortcomings are further annotated in the source code.
 
 # CREATORS #
 Matteus Laurent - matla782@student.liu.se
