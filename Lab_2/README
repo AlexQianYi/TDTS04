@@ -33,6 +33,8 @@ Included in the <NetNinny.tar.gz> archive:
 * Makefile. Compile with 'make ninnyproxy'.
 * Run Net Ninny Proxy using the command:
       ninnyproxy <desired proxy port number to specify for browser>
+* Configure your web browser to fetch http data through 127.0.0.1 and your
+      selected port.
 
 
 ### TESTING AND LIMITATIONS ###
@@ -82,6 +84,8 @@ Test\Env   1	 2     3     4
 
 ## KNOWN ISSUES ##
 Remote running of Netninny is currently not fully supported.
+Netninny does currently not support Chromium GET requests as the Connection-
+header is named "Proxy-Connection".
 
 ## NETNINNY CAPABILITIES ##
 
