@@ -1,7 +1,5 @@
-Source code structure:
+### SOURCE CODE STRUCTURE ###
 
-/*** CODE STRUCTURE: ***
- *
  * help function declarations
  *
  * INT MAIN *
@@ -26,10 +24,10 @@ Source code structure:
  * - <8> FILTER the response
  * - Forward the response to client
  * - End child session
- */
 
 
-Included in the <Net Ninny Proxy .tar.gz> (to be named):
+### PROVIDED FILES ###
+Included in the <NetNinny.tar.gz> archive:
 
 * The source code: nin_proxy.cc
 * Makefile. Compile with 'make ninnyproxy'.
@@ -57,7 +55,7 @@ e) http://www.stackoverflow.com
 f) http://www.aftonbladet.se
 g) http://www.svd.se
 h) http://www.bbc.com
-i) http://google.com searching blacklisted worsd
+i) http://google.com searching blacklisted words
 j) http://video.wired.com
 k) http://swedbank.se
 
@@ -94,3 +92,10 @@ streaming over HTTP. The proxy only filters content based on transmission from
 server to client. A modified-since request that is redirected to a cache will
 only filter if the cache is not local and uses HTTP communication. The proxy
 allows for the host to reuse the bound port upon process termination.
+
+# CREATORS #
+Matteus Laurent - matla782@student.liu.se
+Oscar Petersson - oscpe262@student.liu.se
+
+Creds to Brian "Beej Jorgensen" Hall for his excellent guide found at
+http://beej.us/guide/bgnet/
