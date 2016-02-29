@@ -89,13 +89,16 @@ header is named "Proxy-Connection".
 
 ## NETNINNY CAPABILITIES ##
 
-The proxy only handles HTTP requests. The proxy filters URL and plain uncom-
-pressed text content for certain keywords. In current state (probably because of
-child session limitation of 8M-sized buffer), the proxy does not handle video
-streaming over HTTP. The proxy only filters content based on transmission from
-server to client. A modified-since request that is redirected to a cache will
-only filter if the cache is not local and uses HTTP communication. The proxy
-allows for the host to reuse the bound port upon process termination.
+The proxy only handles HTTP requests.
+The proxy filters URL and plain uncompressed text content for certain keywords.
+In current state (probably because of child session limitation of 8M-sized buffer),
+the proxy might run into issues with video streaming over HTTP.
+The proxy only filters content based on transmission from server to client. A
+  modified-since request that is redirected to a cache will only filter if the
+  cache is not local and uses HTTP communication.
+The proxy allows for the host to reuse the bound port upon process termination.
+The Proxy currently can't filter gzipped content, but might be included in a
+  future version.
 
 # CREATORS #
 Matteus Laurent - matla782@student.liu.se
