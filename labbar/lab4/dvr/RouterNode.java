@@ -1,15 +1,17 @@
 /*
- * 1. Constructor
- * 2. recvUpdate()
+ * ---1. Constructor---
+ * ---2. recvUpdate()---
  * 3. printDistanceTable()
  *
- * 4. updateLinkCost()
+ * ---4. updateLinkCost()---
  *
  * 5. Poisoned Reverse implementation
  */
 
 
-import javax.swing.*;        
+import javax.swing.*;
+import java.util.Arrays;
+import java.awt.Font;     
 
 class RouteEntry {
     int firsthop;
@@ -18,89 +20,252 @@ class RouteEntry {
 
 public class RouterNode {
     private int myID;
-    private GuiTextArea myGUI;
     private RouterSimulator sim;
+    private GuiTextArea myGUI;
     private int[] linkcosts = new int[RouterSimulator.NUM_NODES];
-    private int[][] bestDistanceto_ofNeighbour = new int[RouterSimulator.NUM_NODES][RouterSimulator.NUM_NODES]; // Allocating (sizeof dist(int) * NUM_NODES * NUM_NODES) space to this table, instead of (s_o dist(int) * NN * number of neighbours * s_o what neighbour(int)).
+    private int[][] bestDistanceto_ofNeighbour = new int[RouterSimulator.NUM_NODES][RouterSimulator.NUM_NODES]; //Allocating (sizeof dist(int) * NUM_NODES * NUM_NODES) space to this table, instead of (s_o dist(int) * NN * number of neighbours * s_o what neighbour(int)).
     private RouteEntry[] bestRouteto = new RouteEntry[RouterSimulator.NUM_NODES];
-    private final bool[] isNeighbour = new bool[RouterSimulator.NUM_NODES]; // Assuming no severed connections or restructuring
-    
+    private final boolean[] isNeighbour = new boolean[RouterSimulator.NUM_NODES]; //Assuming no severed connections or restructuring
+
     //--------------------------------------------------
     public RouterNode(int ID, RouterSimulator sim, int[] linkcosts) {
 	myID = ID;
 	this.sim = sim;
 	myGUI = new GuiTextArea("  Output window for Router #"+ ID + "  ");
-	
+
 	System.arraycopy(linkcosts, 0, this.linkcosts, 0, RouterSimulator.NUM_NODES);
-	
-	// Set initial best routes and determine neighbours. "Everything in java defaults to 0".
-	for (int i ; i < RouterSimulator.NUM_NODES ; ++i) {
+
+	//Build the bestRouteto-array with actual RouteEntry:s.
+	//Set initial best routes (bestRouteto) and determine neighbours (isNeighbour).
+	//"Everything in java defaults to 0". IS A LIE.
+	for (int i = 0 ; i < RouterSimulator.NUM_NODES ; ++i) {
+	    bestRouteto[i] = new RouteEntry() {{ firsthop = 0; distance = 0; }};
 	    bestRouteto[i].firsthop = i;
-	    if ((bestRouteto[i].distance = linkcosts[i]) != RouterSimulator.INFINITY)
+	    if ((bestRouteto[i].distance = linkcosts[i]) != RouterSimulator.INFINITY && i != myID)
 		isNeighbour[i] = true;
-	    else // *** <- Don't need? ***
-		isNeighbour[i] = false;
+	    else 	
+		isNeighbour[i] = false; //We are not neighbours with ourselves
+	}
+	//Set initial values of bestDistanceto_ofNeighbour[][] to infinity, and 0 on the diagonal.
+	for (int i = 0 ; i < RouterSimulator.NUM_NODES ; ++i) {
+	    Arrays.fill(bestDistanceto_ofNeighbour[i], RouterSimulator.INFINITY);
+	    bestDistanceto_ofNeighbour[i][i] = 0;
 	}
 
+	printDistanceTable();
+	informNeighbours();
     }
-    
+
+
+
+
+ 
     //--------------------------------------------------
     public void recvUpdate(RouterPacket pkt) {
-	bool bRtchanged; // = false
-	int src {pkt.sourceid};
+	boolean bRtchanged = false;
+	int src = pkt.sourceid;
+	RouteEntry minroute = new RouteEntry() {{ firsthop = 0; distance = 0; }};
 
-	//update bestDistanceto_ofNeighbour[i][sourceid]
-	for (int i ; i < RouterSimulator.NUM_NODES ; ++i) {	    
-	    bestDistanceto_ofNeighbour[i][src] = pkt.mincost[i]; // Take note of use of the 2-d array of bDt_oN
-	    // Update D_thisnode(i) if c(thisnode, src) + D_src(i) < D_thisnode(i) 
-	    if (linkcosts[src] + pkt.mincost[i] < bestRouteto[i].distance) {
-		bestRouteto[i].distance = linkcosts[src] + pkt.mincost[i];
-		bestRouteto[i].firsthop = src;
-		bRtchanged = true;
+	//Check packet contents. Update route and source's distance to i as necessary.
+	for (int i = 0 ; i < RouterSimulator.NUM_NODES ; ++i) {
+	    //D_src(i) the same - go to next i.
+	    if (pkt.mincost[i] == bestDistanceto_ofNeighbour[i][src]) {
+		continue;
 	    }
-	// Need to consider update for worse bestRoute
-	//  if(bestRouteto[i].firsthop==src)
-	// true (if worse)
-	// min(D_j(i)+c(me,j), j:0,1,...,NUM_NODES)
-	}
+	    //D_src(i) got better
+	    else if (pkt.mincost[i] < bestDistanceto_ofNeighbour[i][src]) {
+		//Update local neighbour-table entry.
+		bestDistanceto_ofNeighbour[i][src] = pkt.mincost[i];
 
-	if (bRtchanged) {
-	    int[RouterSimulator.NUM_NODES] mincosts;
-	    for (int i ; i < RouterSimulator.NUM_NODES ; ++i)
-		mincosts[i] = bestRouteto[i].distance;
+		//Can we improve our routing?
+		if (linkcosts[src] + pkt.mincost[i] < bestRouteto[i].distance) {
+		    bestRouteto[i].distance = linkcosts[src] + pkt.mincost[i];
+		    bestRouteto[i].firsthop = src;
+		    bRtchanged = true;
+		}
+	    }
+	    //D_src(i) got worse - However, are we routing through src to i?
+	    else {
+		//Update local neighbour-table entry.
+		bestDistanceto_ofNeighbour[i][src] = pkt.mincost[i];
 
-	    RouterPacket updatepkt(myID, 0, mincosts);
-
-	    for (int i ; i < RouterSimulator.NUM_NODES ; ++i) {
-		if(isNeighbour[i]) {
-		    updatepkt.destid = i;
-		    sendUpdate(updatepkt);
-		    //CONTINUE CHECKING FROM HERE
+		if (bestRouteto[i].firsthop == src) {
+		    minroute.distance = RouterSimulator.INFINITY;
+		    //We have no clues which route to i could possibly be optimal. We must check them all!
+		    //Find the best route/distance to i based on all saved tables of nodes j.
+		    for (int j = 0 ; j < RouterSimulator.NUM_NODES ; ++j) {
+			if (!isNeighbour[j]) {
+			    continue;
+			}
+		   
+			if (linkcosts[j] + bestDistanceto_ofNeighbour[i][j] < minroute.distance) {
+			    minroute.distance = linkcosts[j] + bestDistanceto_ofNeighbour[i][j];
+			    minroute.firsthop = j;
+			}
+		    }
+		    //New best route in minroute.
+		    bestRouteto[i] = minroute;
+		    bRtchanged = true; 
 		}
 	    }
 
 	}
+
+	printDistanceTable();
+
+	if (bRtchanged) {
+	    informNeighbours();
+	}
     }
     
-    
+
     //--------------------------------------------------
     private void sendUpdate(RouterPacket pkt) {
 	sim.toLayer2(pkt);
-	
     }
   
     
     //--------------------------------------------------
     public void printDistanceTable() {
 	myGUI.println("Current table for " + myID +
-		      "  at time " + sim.getClocktime());
+		      " at time " + sim.getClocktime());
+	myGUI.print("     to");
+	for (int i = 0 ; i < RouterSimulator.NUM_NODES ; ++i)
+	    myGUI.print("     " + i);
+	myGUI.println();
+
+	myGUI.print("from __");
+	for (int i = 0 ; i < RouterSimulator.NUM_NODES ; ++i)
+	    myGUI.print("____");
+	myGUI.println();
+
+	String extraspaces = "";
+
+	for (int i = 0 ; i < RouterSimulator.NUM_NODES ; ++i) {
+	    myGUI.print(i + "    | ");
+	    if (i != myID) {
+		for (int j = 0 ; j < RouterSimulator.NUM_NODES ; ++j) {
+		    if(bestDistanceto_ofNeighbour[j][i]/100 != 0) {
+			extraspaces = "";
+		    }
+		    else if(bestDistanceto_ofNeighbour[j][i]/10 != 0) {
+			extraspaces = "  ";
+		    }
+		    else {
+			extraspaces = "    ";
+		    }
+		    myGUI.print(" " + extraspaces + bestDistanceto_ofNeighbour[j][i]);
+		}
+	    }
+	    else {
+		for (int j = 0 ; j < RouterSimulator.NUM_NODES ; ++j) {
+		    if(bestRouteto[j].distance/100 != 0) {
+			extraspaces = "";
+		    }
+		    else if(bestRouteto[j].distance/10 != 0) {
+			extraspaces = "  ";
+		    }
+		    else {
+			extraspaces = "    ";
+		    }
+		    myGUI.print(" " + extraspaces + bestRouteto[j].distance);
+		}
+	    }
+	    myGUI.println();
+	}
+
+	myGUI.println();
     }
+
+    /*
+Current table for i at time [time]
+     to   1   2   3   4   5   6   7  
+from ___________________________
+1    |  999
+2    |    
+3    |
+4    |
+5    |
+6    |
+7    |
+
+
+
+    Note the NUM_NODES*NUM_NODES size of matrix */
+
 
     //--------------------------------------------------
     public void updateLinkCost(int dest, int newcost) {
-	// Särskilj rutt och länk!!
-	//Länk + rutt < rutt?
+	boolean bRtchanged = false;
+	RouteEntry minroute = new RouteEntry() {{ firsthop = 0; distance = 0; }};
+	int oldcost = linkcosts[dest];
 
+	//Update linkcosts entry.
+	linkcosts[dest] = newcost;
+
+	//Update routes as necessary
+
+	//Link cost c(me, dest) got better
+	if (newcost < oldcost) { 
+	    //Can we improve our route to i?
+	    for (int i = 0 ; i < RouterSimulator.NUM_NODES ; ++i) {
+		if (newcost + bestDistanceto_ofNeighbour[i][dest] < bestRouteto[i].distance) {
+		    bestRouteto[i].distance = newcost + bestDistanceto_ofNeighbour[i][dest];
+		    bestRouteto[i].firsthop = dest;
+		    bRtchanged = true;
+		}	
+	    }	    
+	}
+	//Link cost c(me, dest) got worse
+	else {
+	    //Are we routing through dest to i?
+	    for(int i = 0 ; i < RouterSimulator.NUM_NODES ; ++i) {
+		if (bestRouteto[i].firsthop == dest) {
+		    minroute.distance = RouterSimulator.INFINITY;
+		    //We have no clues which route to i could possibly be optimal. We must check them all!
+		    //Find the best route/distance to i based on all saved tables of nodes j.
+		    for (int j = 0 ; j < RouterSimulator.NUM_NODES ; ++j) {
+			if (!isNeighbour[j]) {
+			    continue;
+			}
+			
+			if (linkcosts[j] + bestDistanceto_ofNeighbour[i][j] < minroute.distance) {
+			    minroute.distance = linkcosts[j] + bestDistanceto_ofNeighbour[i][j];
+			    minroute.firsthop = j;
+			}
+		    } 
+		    //New best route in minroute.
+		    bestRouteto[i] = minroute;
+		    bRtchanged = true; 
+		}
+	    }	    
+	}
+	
+	printDistanceTable();
+
+	if (bRtchanged) {
+	    informNeighbours();
+	}	
     }
+ 
+
+    //--------------------------------------------------
+    //Self-explanatory   
+    private void informNeighbours() {
+        int[] distancecosts = new int[RouterSimulator.NUM_NODES];
+    
+	for (int i = 0 ; i < RouterSimulator.NUM_NODES ; ++i)
+	    distancecosts[i] = bestRouteto[i].distance;
+    
+	RouterPacket updatepkt = new RouterPacket(myID, 0, distancecosts);
+    
+	for (int i = 0 ; i < RouterSimulator.NUM_NODES ; ++i) {
+	    if(isNeighbour[i]) {
+		updatepkt.destid = i;
+		sendUpdate(updatepkt);
+	    }
+	}
+    }
+    
 
 }
