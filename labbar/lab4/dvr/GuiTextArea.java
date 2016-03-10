@@ -1,4 +1,5 @@
-import javax.swing.*;        
+import javax.swing.*;
+import java.awt.Font;
 
 public class GuiTextArea {
     
@@ -13,6 +14,7 @@ public class GuiTextArea {
 	
 	myArea = new JTextArea(20, 40);
 	myArea.setEditable(false);
+	myArea.setFont(new Font("monospaced", Font.PLAIN, 12));
 	JScrollPane scrollPane = 
 	    new JScrollPane(myArea,
 			    JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,

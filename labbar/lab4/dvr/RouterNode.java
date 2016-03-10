@@ -129,12 +129,12 @@ public class RouterNode {
     public void printDistanceTable() {
 	myGUI.println("Current table for " + myID +
 		      " at time " + sim.getClocktime());
-	myGUI.print("     to");
+	myGUI.print("   \\to");
 	for (int i = 0 ; i < RouterSimulator.NUM_NODES ; ++i)
-	    myGUI.print("     " + i);
+	    myGUI.print("   " + i);
 	myGUI.println();
 
-	myGUI.print("from __");
+	myGUI.print("from\\__");
 	for (int i = 0 ; i < RouterSimulator.NUM_NODES ; ++i)
 	    myGUI.print("____");
 	myGUI.println();
@@ -142,17 +142,17 @@ public class RouterNode {
 	String extraspaces = "";
 
 	for (int i = 0 ; i < RouterSimulator.NUM_NODES ; ++i) {
-	    myGUI.print(i + "    | ");
+	    myGUI.print(i + "    |");
 	    if (i != myID) {
 		for (int j = 0 ; j < RouterSimulator.NUM_NODES ; ++j) {
 		    if(bestDistanceto_ofNeighbour[j][i]/100 != 0) {
 			extraspaces = "";
 		    }
 		    else if(bestDistanceto_ofNeighbour[j][i]/10 != 0) {
-			extraspaces = "  ";
+			extraspaces = " ";
 		    }
 		    else {
-			extraspaces = "    ";
+			extraspaces = "  ";
 		    }
 		    myGUI.print(" " + extraspaces + bestDistanceto_ofNeighbour[j][i]);
 		}
@@ -163,10 +163,10 @@ public class RouterNode {
 			extraspaces = "";
 		    }
 		    else if(bestRouteto[j].distance/10 != 0) {
-			extraspaces = "  ";
+			extraspaces = " ";
 		    }
 		    else {
-			extraspaces = "    ";
+			extraspaces = "  ";
 		    }
 		    myGUI.print(" " + extraspaces + bestRouteto[j].distance);
 		}
@@ -176,22 +176,6 @@ public class RouterNode {
 
 	myGUI.println();
     }
-
-    /*
-Current table for i at time [time]
-     to   1   2   3   4   5   6   7  
-from ___________________________
-1    |  999
-2    |    
-3    |
-4    |
-5    |
-6    |
-7    |
-
-
-
-    Note the NUM_NODES*NUM_NODES size of matrix */
 
 
     //--------------------------------------------------
