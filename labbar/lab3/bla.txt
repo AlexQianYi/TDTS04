@@ -1,0 +1,170 @@
+Filters:
+ip.src == 192.168.1.102 && tcp.stream == 0
+ip.src == 128.119.245.12 && tcp.stream == 0
+
+
+Packet 1, tcp-ethereal-trace-1
+
+Src Port:		04 89			0000 0100  1000 1001 (1161)
+Dest Port:		00 50			0000 0000  0101 0000 (80)
+
+Seq #:			0d d6 01 f4		0000 1101  1101 0110  0000 0001  1111 0100 (~192+ M)
+
+Ack #:		   	00 00 00 00
+
+Header length: 	      	7			0111
+* Rsrv/N/CWR/ECNE:  	0(0)			0000 00
+U-A-P-R-S-F:		(0)2			00 0010		    (SYN)
+Receive window:		40 00			0100 0000  0000 0000 (2^14, 16384 bytes)
+
+Checksum:		f6 e9
+Urg data pnter:		00 00
+
+Options (var. length):	02 04 05 b4 01 01 04 02
+
+
+
+
+
+
+
+
+
+
+
+
+Questions:
+
+1. 4 and 199 (last segment sent)  (203 - ACK for final byte and HTTP 200 OK received)
+
+2. 192.168.1.102:1161
+
+3. 128.119.245.12:80
+
+4. 0x0d d6 01 f4 ; The SYN flag (U-A-P-R-S-F: 0b000010)
+
+5. 0x34 a2 74 19 ; The Acknowledgment number: 0x0d d6 01 f5 ; Received seq number + 1 (the next byte expected) ; The SYN and ACK flags (U-A-P-R-S-F: 0b010010)
+
+6. 0x0d d6 01 f5
+
+7. "First 6" segments sent:			Respective ACKs received:	~RTT:	~EstimatedRTT:
+   0x0d d6 01 f5 (1)		0.026477	(566)	    0.053937		0.027	0.027
+   0x0d d6 04 2a (566)		0.041737	(2026)	    0.077294	    	0.036	0.028125 ~ (0.023625 + 0.0045)
+   0x0d d6 09 de (2026)		0.054026	(3486)	    0.124085		0.070	0.033359 ~ (0.024609 + 0.00875)
+   0x0d d6 0f 92 (3486)		0.054690	(4946)	    0.169118		0.115	0.043564 ~ (0.029189 + 0.014375)
+   0x0d d6 15 46 (4946)		0.077405	(6406)	    0.217299		0.140	0.055619 ~ (0.038119 + 0.0175)
+   0x0d d6 1a fa (6406)		0.078157	(7866)	    0.267802		0.189	0.072292 ~ (0.048667 + 0.023625)
+
+
+8. (TCP Header + TCP data)
+   1. 20 + 565
+   2. 20 + 1460
+   3. 20 + 1460
+   4. 20 + 1460
+   5. 20 + 1460	
+   6. 20 + 1460
+
+9. The first SYN, ACK response contains the value for Window size: 5840. The value sharply increases up to 62780 @ packet 51. It seemingly stays at 62780 for the rest of the exchange.
+
+10. Doesn't appear that way. Looking at the time-sequence graph, no sequence number plots re-appear at a later time.
+
+11. Size of every segment until packet 51.
+
+Essentially every segment is acknowledged until the receiver reaches its "max" window value for the exchange, i.e. 62780 bytes @ packet 51. After that point, every other segment is acknowledged instead. Seeing how these behavioural changes occur at the same time, one could make a few assumptions about the server implementation:
+    * The minimum amount of bytes received before responding with an ACK could be a proportion of Window Size Value.
+    * Seemingly, Window Size continues to increase until size of (non-pushed) received segments is less than that minimum.
+
+12. A total of 164090 bytes are transferred to the server (last ACK number is 164091). First segment sends @ 0.026477. Last ACK is received @ 5.461175. Alternatively, last segment is sent 5.297341.
+
+=> ~ 30193 B/s or 31131 B/s
+
+
+13.
+
+Unacknowledged packets after packet #:
+
+#   Event       Unacked packets		
+
+4.  +1 	        1
+5.  +1   	2
+6.  ACK #4	1 
+7.  +1       	2
+8.  +1	    	3
+9.  ACK #5   	2
+10. +1		3
+11. +1		4
+12. ACK #7	3
+13. +1		4
+14. ACK #8	3
+15. ACK #10	2
+16. ACK #11	1
+17. ACK #13	0
+18. +1		1
+19. +1		2
+20. +1		3
+21. +1		4
+22. +1		5
+23. +1		6
+24. ACK #18	5
+25. ACK #19	4
+26. ACK #20	3
+27. ACK #21	2
+28. ACK #22	1
+29. ACK #23	0
+(repeat 18 to 29 until 51, where receiver starts ACKing 2 packets at a time).
+
+If anything, Congestion Avoidance kicks in at around event #12, since we'd expect to increase our "packets in network" to 5 and immediately send two new ones if we weren't in CA.
+
+Packets are never lost, so the rest of the exchange is arguably limited by flow control/application.
+
+Interestingly, after we hit a cap at 6 unacked packets, the full exchange becomes less dynamic, and the sender only sends out 6 new packets in a burst once it has received ACKs (arriving with ~50 ms intervals) for all previous 6 packets. It doesn't seem to be limited by flow control either, since receiver ACKs consistently include Window Size Values for plenty o' bytes.
+
+14. Receiver advertised window is the value included in the TCP header. The one we care about in a one-way exchange is the receiver's 'RcvWindow'. The sender will not push more unacked data onto the network than the value of the receiver's RcvWindow. This is what we refer to as flow control.
+
+The congestion window is a window on the sender's side that the sender uses to try and avoid congesting the network. Whether this window actually measures unacked data or packets on the network is for the moment unknown to us. For simplicity's sake (in task #13 above), we think of it as unacked packets on the network.
+
+Obviously, to the sender, this means both flow and congestion control is considered for deciding when to push more data.
+
+If the above is all true, unacknowledged bytes is considered with flow control, i.e. in consideration of the receiver.
+
+The effective window at the sender tracks how many unacked packets it allows itself to have, i.e. in consideration of the network.
+
+15. To find the congestion window size past the initial early packets, we'd have to actually lose packets. If we consider an application scenario with unlimited data and a receiver buffer/window of unlimited size, TCP according to the literature so far would greedily always keep as many unacked packets on the network as it allows itself to (congestion window). Even if it starts at one and only grows linearly after hitting it's CA-zone (past sstresh), we'd expect the number of unacked packets to grow until a retransmit or timeout, after which we'd cut sstresh in half and start from either 1 or the new ssthresh value. This is not something we are seeing the trace file. After presumably hitting CA, a short while after, we hit another soft cap of some sort, at which point the sender limits itself to the data in the burst of 6 packets on the network at a time.
+
+16. Throughput: Ttb / Duration.
+Connection #	Throughput
+1	   	~316 882 B/s
+2		~318 316 B/s
+3		~321 904 B/s
+4		~318 820 B/s
+
+~1 275 922 B/s total bandwidth of the client host. Same path (likely), same approximate throughput on the same RTT.
+
+17.
+Connection #	Throughput	    RTT	    Average unacked data (data on the network)
+1	   	~2 903 546 B/s	  * 0.013 = ~ 37 746 B
+2		~1 955 509 B/s	  * 0.035 = ~ 68 442 B
+3		~1 687 717 B/s	  * 0.068 = ~114 765 B
+4		~1 559 873 B/s	  * 0.073 = ~113 870 B
+5		~1 206 786 B/s	  * 0.049 = ~ 59 133 B
+6		~  784 941 B/s	  * 0.033 = ~ 25 903 B
+7		~  730 499 B/s	  * 0.135 = ~ 98 617 B
+8		~  480 143 B/s	  * 0.326 = ~156 526 B
+9		~  435 805 B/s	  * 0.322 = ~140 329 B
+
+~11 744 820 B/s total bandwitdth of the client host. Different servers means different paths, and different bottlenecks. To discuss fairness, we'd need to know about connections on/through the same bottlenecks. Potentially, the client, or last link, could be the single bottleneck, in which case there's quite a disparity in throughput between the connections. Say we're working against a uniform network and averagely distributed loads at all times - the argument should then be focused on the average amount of data every connection got unacked on the network. A further, more difficult to approach, aspect is to consider not local throughputs or unacked data per connection, but per host. Opening many connections could be considered an issue for fairness in bandwidth use.
+
+18.
+Connection #	Throughput	    RTT     Average unacked data (data on the network)
+1	   	~1 876 744 B/s	  * 0.040 = ~ 75 070 B
+2		~1 559 235 B/s	  * 0.036 = ~ 56 132 B
+3		~1 093 803 B/s	  * 0.100 = ~109 380 B
+4		~1 103 449 B/s	  * 0.068 = ~ 75 035 B
+5		~  930 210 B/s	  * 0.031 = ~ 28 836 B
+6		~  877 399 B/s	  * 0.033 = ~ 28 954 B
+7		~  849 341 B/s	  * 0.122 = ~103 620 B
+8		~  693 473 B/s	  * 0.146 = ~101 247 B
+9		~  673 479 B/s	  * 0.074 = ~ 49 837 B
+10		~  659 145 B/s	  * 0.066 = ~ 43 504 B
+
+In the BitTorrent example, we again have different download sources of different peers. The paths differ, and so does the potential bottlenecks. The send rate of seeders may not necessarily be uniform either. On the application level, the BitTorrent client may decide to prioritize uploads/downloads to peers with faster possible throughput (generally fewer links and closer in proximity) - a relationship that may also be affected by the client's ability/willingness to upload data back. Even if the presented numbers include 'uploaded bytes' in the listed TtB-values, the consideration is the same.
