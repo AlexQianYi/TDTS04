@@ -1,0 +1,118 @@
+***********************************************
+*** TASK A (2 paragraphs encompassing 1-12) ***:
+***********************************************
+
+Source and destination in TCP wrappers? Ports!
+Three-way handshake to set up the TCP connection:
+
+SYN  ->
+     <- SYN-ACK
+ACK  ->
+DATA -> (e.g. start of HTTP transmission)
+
+Sequence numbers are randomly generated on both sides. For each byte acknowledged, the sequence number increments. The receiver acknowledges received packets by including an acknowledgement number that tells the original sender what the next sequence number should be (the next byte they're expecting).
+The handshake increments these by one, even though no data is sent.
+
+Without RTT estimates, we would not know how to dynamically set a timeout value for retransmissions. A packet loss at the end of a string of packets (say we don't send more until that string of packets have been ACK'd) would have to time out without an ACK before the sender can realize the packet was lost. If our window and implementation allows for continuous multiples of packets on the network, we'd often send out later packets before receiving acknowledgement for previous ones. When the receiver receives packets in the wrong order, the receiver will still send an ACK, but with the acknowledgement number of the next byte it *wants*. In many TCP implementations, 3 received duplicate ACKs => retransmit the requested packet.
+
+
+**************
+*** TASK B ***:
+**************
+
+13.
+
+Unacknowledged packets after packet #:
+
+#   Event       Unacked packets		
+
+4.  +1 	        1
+5.  +1   	2
+6.  ACK #4	1 
+7.  +1       	2
+8.  +1	    	3
+9.  ACK #5   	2
+10. +1		3
+11. +1		4
+12. ACK #7	3
+13. +1		4
+14. ACK #8	3
+15. ACK #10	2
+16. ACK #11	1
+17. ACK #13	0
+18. +1		1
+19. +1		2
+20. +1		3
+21. +1		4
+22. +1		5
+23. +1		6
+24. ACK #18	5
+25. ACK #19	4
+26. ACK #20	3
+27. ACK #21	2
+28. ACK #22	1
+29. ACK #23	0
+(repeat 18 to 29 until 51, where receiver starts ACKing 2 packets at a time).
+
+If anything, Congestion Avoidance kicks in at around event #12, since we'd expect to increase our "packets in network" to 5 and immediately send two new ones if we weren't in CA.
+
+Packets are not lost in this exchange, so the rest of the exchange is arguably limited by flow control/application.
+
+Interestingly, after we hit a cap at 6 unACK'd packets, the full exchange becomes less dynamic, and the sender only sends out 6 new packets in a burst once it has received ACKs (arriving with ~50 ms intervals) for all previous 6 packets. It doesn't seem to be limited by flow control either, since receiver ACKs consistently include Window Size Values for plenty o' bytes more than whatever's unACK'd.
+
+
+14. Receiver advertised window is the value included in the TCP header, both ways. The one we care about in a one-way exchange is the receiver's 'RcvWindow'. The sender will not push more unACK'd data onto the network than the value of the receiver's RcvWindow. This is what we refer to as flow control.
+
+The congestion window is a window on the sender's side that the sender uses to try and avoid congesting the network. The window increases by one packet per new ACK that the sender receives (exponential growth) until it reaches a soft threshold. Past this, the growth of the threshold is linear - window increases by 1/window per packet received. In the event of a packetloss, window will (in most contemporary TCP implementations) halve and proceed in the linear phase.
+
+Obviously, to the sender, this means both flow and congestion control is considered for deciding when to push more data.
+
+
+15. To find the congestion window size past the initial early packets, we'd have to actually lose packets. If we consider an application scenario with unlimited data and a receiver buffer/window of unlimited size, TCP according to the literature so far would greedily always keep as many unacked packets on the network as it allows itself to (congestion window). Even if it starts at one and only grows linearly after hitting it's CA-zone (past sstresh), we'd expect the number of unacked packets to grow until a retransmit or timeout, after which we'd cut sstresh in half and start from either 1 or the new ssthresh value. This is not something we are seeing the trace file. After presumably hitting CA, a short while after, we hit another soft cap of some sort, at which point the sender limits itself to the data in the burst of 6 packets on the network at a time.
+
+
+**************
+*** TASK C ***:
+**************
+
+16. Throughput: Ttb / Duration.
+Connection #	Throughput
+1	   	~316 882 B/s
+2		~318 316 B/s
+3		~321 904 B/s
+4		~318 820 B/s
+
+~1 275 922 B/s total bandwidth of the client host. Same path (likely), same approximate throughput on the same RTT.
+
+
+17.
+Connection #	Throughput	    RTT	    Average unacked data (data on the network)
+1	   	~2 903 546 B/s	  * 0.013 = ~ 37 746 B
+2		~1 955 509 B/s	  * 0.035 = ~ 68 442 B
+3		~1 687 717 B/s	  * 0.068 = ~114 765 B
+4		~1 559 873 B/s	  * 0.073 = ~113 870 B
+5		~1 206 786 B/s	  * 0.049 = ~ 59 133 B
+6		~  784 941 B/s	  * 0.033 = ~ 25 903 B
+7		~  730 499 B/s	  * 0.135 = ~ 98 617 B
+8		~  480 143 B/s	  * 0.326 = ~156 526 B
+9		~  435 805 B/s	  * 0.322 = ~140 329 B
+
+~11 744 820 B/s total bandwitdth of the client host. Different servers means different paths, and different bottlenecks. Potentially, the client, or last link, could be a single bottleneck, in which case there's quite a disparity in throughput between the connections. Say we're working against a uniform network and averagely distributed loads at all times - the argument should then be more focused on the average amount of data every connection got unacked on the network. A further, more difficult to approach, aspect is to consider not local throughputs or unacked data per connection, but per host. Opening many connections could be considered an issue for fairness in bandwidth use.
+
+Regardless, longer roundtrips probably means more router hops. More router hops means more bottlenecks and potential for more packet drops. Total combined bandwidth on bottleneck routers should be fairly proportional to packet loss events for the connection, ultimately reigning throughput of distant connections in a bit.
+
+
+18.
+Connection #	Throughput	    RTT     Average unacked data (data on the network)
+1	   	~1 876 744 B/s	  * 0.040 = ~ 75 070 B
+2		~1 559 235 B/s	  * 0.036 = ~ 56 132 B
+3		~1 093 803 B/s	  * 0.100 = ~109 380 B
+4		~1 103 449 B/s	  * 0.068 = ~ 75 035 B
+5		~  930 210 B/s	  * 0.031 = ~ 28 836 B
+6		~  877 399 B/s	  * 0.033 = ~ 28 954 B
+7		~  849 341 B/s	  * 0.122 = ~103 620 B
+8		~  693 473 B/s	  * 0.146 = ~101 247 B
+9		~  673 479 B/s	  * 0.074 = ~ 49 837 B
+10		~  659 145 B/s	  * 0.066 = ~ 43 504 B
+
+In the BitTorrent example, we again have different download sources of different peers. The paths differ, and so does the potential bottlenecks. The send rate of seeders may not necessarily be uniform either. On the application level, the BitTorrent client may decide to prioritize uploads/downloads to peers with faster possible throughput (generally fewer links and closer in proximity) - a relationship that may also be affected by the client's ability/willingness to upload data back. Even if the presented numbers include 'uploaded bytes' in the listed TtB-values, the consideration is the same.
