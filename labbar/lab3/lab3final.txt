@@ -24,34 +24,34 @@ Without RTT estimates, we would not know how to dynamically set a timeout value 
 
 Unacknowledged packets after packet #:
 
-#   Event       Unacked packets		
+#   Event       Unacked packets         
 
-4.  +1 	        1
-5.  +1   	2
-6.  ACK #4	1 
-7.  +1       	2
-8.  +1	    	3
-9.  ACK #5   	2
-10. +1		3
-11. +1		4
-12. ACK #7	3
-13. +1		4
-14. ACK #8	3
-15. ACK #10	2
-16. ACK #11	1
-17. ACK #13	0
-18. +1		1
-19. +1		2
-20. +1		3
-21. +1		4
-22. +1		5
-23. +1		6
-24. ACK #18	5
-25. ACK #19	4
-26. ACK #20	3
-27. ACK #21	2
-28. ACK #22	1
-29. ACK #23	0
+4.  +1          1
+5.  +1          2
+6.  ACK #4      1 
+7.  +1          2
+8.  +1          3
+9.  ACK #5      2
+10. +1          3
+11. +1          4
+12. ACK #7      3
+13. +1          4
+14. ACK #8      3
+15. ACK #10     2
+16. ACK #11     1
+17. ACK #13     0
+18. +1          1
+19. +1          2
+20. +1          3
+21. +1          4
+22. +1          5
+23. +1          6
+24. ACK #18     5
+25. ACK #19     4
+26. ACK #20     3
+27. ACK #21     2
+28. ACK #22     1
+29. ACK #23     0
 (repeat 18 to 29 until 51, where receiver starts ACKing 2 packets at a time).
 
 If anything, Congestion Avoidance kicks in at around event #12, since we'd expect to increase our "packets in network" to 5 and immediately send two new ones if we weren't in CA.
@@ -76,26 +76,26 @@ Obviously, to the sender, this means both flow and congestion control is conside
 **************
 
 16. Throughput: Ttb / Duration.
-Connection #	Throughput
-1	   	~316 882 B/s
-2		~318 316 B/s
-3		~321 904 B/s
-4		~318 820 B/s
+Connection #    Throughput
+1               ~316 882 B/s
+2               ~318 316 B/s
+3               ~321 904 B/s
+4               ~318 820 B/s
 
 ~1 275 922 B/s total bandwidth of the client host. Same path (likely), same approximate throughput on the same RTT.
 
 
 17.
-Connection #	Throughput	    RTT	    Average unacked data (data on the network)
-1	   	~2 903 546 B/s	  * 0.013 = ~ 37 746 B
-2		~1 955 509 B/s	  * 0.035 = ~ 68 442 B
-3		~1 687 717 B/s	  * 0.068 = ~114 765 B
-4		~1 559 873 B/s	  * 0.073 = ~113 870 B
-5		~1 206 786 B/s	  * 0.049 = ~ 59 133 B
-6		~  784 941 B/s	  * 0.033 = ~ 25 903 B
-7		~  730 499 B/s	  * 0.135 = ~ 98 617 B
-8		~  480 143 B/s	  * 0.326 = ~156 526 B
-9		~  435 805 B/s	  * 0.322 = ~140 329 B
+Connection #    Throughput          RTT     Average unacked data (data on the network)
+1               ~2 903 546 B/s    * 0.013 = ~ 37 746 B
+2               ~1 955 509 B/s    * 0.035 = ~ 68 442 B
+3               ~1 687 717 B/s    * 0.068 = ~114 765 B
+4               ~1 559 873 B/s    * 0.073 = ~113 870 B
+5               ~1 206 786 B/s    * 0.049 = ~ 59 133 B
+6               ~  784 941 B/s    * 0.033 = ~ 25 903 B
+7               ~  730 499 B/s    * 0.135 = ~ 98 617 B
+8               ~  480 143 B/s    * 0.326 = ~156 526 B
+9               ~  435 805 B/s    * 0.322 = ~140 329 B
 
 ~11 744 820 B/s total bandwitdth of the client host. Different servers means different paths, and different bottlenecks. Potentially, the client, or last link, could be a single bottleneck, in which case there's quite a disparity in throughput between the connections. Say we're working against a uniform network and averagely distributed loads at all times - the argument should then be more focused on the average amount of data every connection got unacked on the network. A further, more difficult to approach, aspect is to consider not local throughputs or unacked data per connection, but per host. Opening many connections could be considered an issue for fairness in bandwidth use.
 
@@ -103,16 +103,16 @@ Regardless, longer roundtrips probably means more router hops. More router hops 
 
 
 18.
-Connection #	Throughput	    RTT     Average unacked data (data on the network)
-1	   	~1 876 744 B/s	  * 0.040 = ~ 75 070 B
-2		~1 559 235 B/s	  * 0.036 = ~ 56 132 B
-3		~1 093 803 B/s	  * 0.100 = ~109 380 B
-4		~1 103 449 B/s	  * 0.068 = ~ 75 035 B
-5		~  930 210 B/s	  * 0.031 = ~ 28 836 B
-6		~  877 399 B/s	  * 0.033 = ~ 28 954 B
-7		~  849 341 B/s	  * 0.122 = ~103 620 B
-8		~  693 473 B/s	  * 0.146 = ~101 247 B
-9		~  673 479 B/s	  * 0.074 = ~ 49 837 B
-10		~  659 145 B/s	  * 0.066 = ~ 43 504 B
+Connection #    Throughput          RTT     Average unacked data (data on the network)
+1               ~1 876 744 B/s    * 0.040 = ~ 75 070 B
+2               ~1 559 235 B/s    * 0.036 = ~ 56 132 B
+3               ~1 093 803 B/s    * 0.100 = ~109 380 B
+4               ~1 103 449 B/s    * 0.068 = ~ 75 035 B
+5               ~  930 210 B/s    * 0.031 = ~ 28 836 B
+6               ~  877 399 B/s    * 0.033 = ~ 28 954 B
+7               ~  849 341 B/s    * 0.122 = ~103 620 B
+8               ~  693 473 B/s    * 0.146 = ~101 247 B
+9               ~  673 479 B/s    * 0.074 = ~ 49 837 B
+10              ~  659 145 B/s    * 0.066 = ~ 43 504 B
 
 In the BitTorrent example, we again have different download sources of different peers. The paths differ, and so does the potential bottlenecks. The send rate of seeders may not necessarily be uniform either. On the application level, the BitTorrent client may decide to prioritize uploads/downloads to peers with faster possible throughput (generally fewer links and closer in proximity) - a relationship that may also be affected by the client's ability/willingness to upload data back. Even if the presented numbers include 'uploaded bytes' in the listed TtB-values, the consideration is the same.
