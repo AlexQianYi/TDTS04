@@ -1,0 +1,15 @@
+Split Horizon:
+
+     If B receives information from A, that updates B's route distances, but not route first hops, should we exclude A from the list of nodes to receive B's coming update?
+
+
+
+
+
+     RouteEntry[] bestRouteto;
+     RouteEntry minroute;
+
+
+What happens:
+
+     bestRouteto[i] = minroute; ???

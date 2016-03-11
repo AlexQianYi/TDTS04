@@ -104,7 +104,8 @@ public class RouterNode {
 			}
 		    }
 		    //New best route in minroute.
-		    bestRouteto[i] = minroute;
+		    bestRouteto[i].distance = minroute.distance;
+		    bestRouteto[i].firsthop = minroute.firsthop;
 		    bRtchanged = true; 
 		}
 	    }
@@ -171,11 +172,6 @@ public class RouterNode {
 	}
 	myGUI.println();
 
-	/*	myGUI.print("________");
-	for (int i = 0 ; i < RouterSimulator.NUM_NODES ; ++i)
-	    myGUI.print("____");
-	myGUI.println();*/
-
 	myGUI.print("distance");
 	for (int i = 0 ; i < RouterSimulator.NUM_NODES ; ++i) {
 	    if (i==myID)
@@ -211,11 +207,6 @@ public class RouterNode {
 	RouteEntry minroute = new RouteEntry() {{ firsthop = 0; distance = 0; }};
 	int oldcost = linkcosts[dest];
 
-	System.out.print(myID + "'s firsthops: ");
-	for (int i = 0 ; i < RouterSimulator.NUM_NODES ; ++i)
-	    System.out.print(bestRouteto[i].firsthop + " ");
-	System.out.println();
-
 	//Update linkcosts entry.
 	linkcosts[dest] = newcost;
 
@@ -245,35 +236,20 @@ public class RouterNode {
 			    continue;
 			}
 			
-			if (linkcosts[j] + bestDistanceto_ofNeighbour[i][j] < minroute.distance) {
-			    System.out.println("\n\nRerouting " + myID + " to " + i + 
-					       "\nNeighbour: " + j +
-					       "\nCost " + myID + " to " + j + ": " + linkcosts[j] +
-					       "\n" + j + "'s distance to " + i + ": " + bestDistanceto_ofNeighbour[i][j]);
-					     
+			if (linkcosts[j] + bestDistanceto_ofNeighbour[i][j] < minroute.distance) {	      
 			    minroute.distance = linkcosts[j] + bestDistanceto_ofNeighbour[i][j];
 			    minroute.firsthop = j;
-			    System.out.println("\nCurrent minroute to " + i + ": " + minroute.distance + "d through node " + minroute.firsthop);
 			}
 		    } 
 		    //New best route in minroute.
-		    bestRouteto[i] = minroute;
+		    bestRouteto[i].distance = minroute.distance;
+		    bestRouteto[i].firsthop = minroute.firsthop;
 		    bRtchanged = true; 
 		}
 	    }	    
 	}
 
-	System.out.print(myID + "'s firsthops: ");
-	for (int i = 0 ; i < RouterSimulator.NUM_NODES ; ++i)
-	    System.out.print(bestRouteto[i].firsthop + " ");
-	System.out.println();
-
 	printDistanceTable();
-
-	System.out.print(myID + "'s firsthops: ");
-	for (int i = 0 ; i < RouterSimulator.NUM_NODES ; ++i)
-	    System.out.print(bestRouteto[i].firsthop + " ");	
-	System.out.println();
 
 	if (bRtchanged) {
 	    informNeighbours();
@@ -281,19 +257,26 @@ public class RouterNode {
     }
  
 
-    //--------------------------------------------------
-    //Self-explanatory   
+    //--------------------------------------------------  
     private void informNeighbours() {
         int[] distancecosts = new int[RouterSimulator.NUM_NODES];
     
 	for (int i = 0 ; i < RouterSimulator.NUM_NODES ; ++i)
-	    distancecosts[i] = bestRouteto[i].distance;
+	    distancecosts[i] = bestRouteto[i].distance;	
     
-	RouterPacket updatepkt = new RouterPacket(myID, 0, distancecosts);
-    
+	RouterPacket updatepkt;
+
+	//Prepare a packet for every neighbour i
 	for (int i = 0 ; i < RouterSimulator.NUM_NODES ; ++i) {
 	    if(isNeighbour[i]) {
+		updatepkt = new RouterPacket(myID, 0, distancecosts);
 		updatepkt.destid = i;
+		
+		//If we route to node j through i, poison the reverse
+		for (int j = 0 ; j < RouterSimulator.NUM_NODES ; ++j ) {
+		    if (bestRouteto[j].firsthop == i)
+			updatepkt.mincost[j] = RouterSimulator.INFINITY;
+		}
 		sendUpdate(updatepkt);
 	    }
 	}
