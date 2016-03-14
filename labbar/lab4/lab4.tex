@@ -1,0 +1,225 @@
+%% Doc Props
+\documentclass[10pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+
+% Packages
+\usepackage{
+  titlesec,
+  ifthen,
+  tikz,
+  pifont,
+  textcomp,
+  fixltx2e,
+  color,
+  fullpage,
+  graphicx,
+  afterpage,
+  float,
+  parskip,
+  xfrac,
+  gensymb,
+  mathtools,
+  pdfpages,
+  etoolbox,
+  enumitem,
+  amsmath,
+  hyperref
+}
+%\usepackage[nottoc,section,numbib]{tocbibind}
+%\usepackage[europeancurrents,europeanvoltages,europeanresistors,europeaninductors,smartlabels]{circuitikz}
+%\usepackage{pgfplotstable}
+%\pgfplotsset{compat=1.8}
+\usetikzlibrary{calc,matrix,positioning,arrows,shapes,trees,plotmarks,decorations.markings}
+\usepackage[font={small,it}]{caption} %% Italics in captions
+
+% PDF props
+\hypersetup {
+  bookmarks=true,              % show bookmarks bar?
+  unicode=true,                % non-Latin characters in Acrobat’s bookmarks
+  pdftoolbar=true,             % show Acrobat’s toolbar?
+  pdfmenubar=true,             % show Acrobat’s menu?
+  pdffitwindow=false,          % window fit to page when opened
+  pdfstartview={FitH},         % fits the width of the page to the window
+  pdftitle={TDTI04 Lab4},                 % title
+  pdfauthor={Oscar Petersson, Matteus Laurent}, % author
+  pdfnewwindow=true,           % links in new window
+  hidelinks,                   % hide links (removing color and border)
+  linktoc=all,                 % parts of TOC made into links    
+}
+\urlstyle{same}
+
+% More Props
+%\graphicspath{{./fig/}}
+
+\makeatletter
+%  Properties a la Lisp.
+\def\ece#1#2{\expandafter#1\csname#2\endcsname}%
+% \setproperty{ATOM}{PROPNAME}{VALUE} defines the property PROPNAME on the ``atom'' ATOM to have VALUE.
+% 
+\def\setproperty#1#2#3{\ece\protected@edef{#1@p#2}{#3}}%
+\def\setpropertyglobal#1#2#3{\ece\protected@xdef{#1@p#2}{#3}}%
+%
+% 
+% \getproperty{ATOM}{PROPNAME} expands to the value of the property
+% PROPNAME on ATOM, or to nothing (i.e., \empty), if the property isn't
+% present.
+% 
+\def\getproperty#1#2{%
+  \expandafter\ifx\csname#1@p#2\endcsname\relax
+  % then \empty
+  \else \csname#1@p#2\endcsname
+  \fi
+}%
+%
+\makeatother
+
+% Defs
+% Comfy Command Redefinitions
+\newcommand{\bve}{\begin{verbatim}}
+\newcommand{\itb}{\begin{itemize}}
+\newcommand{\ite}{\end{itemize}}
+\newcommand{\tb}{\textbackslash}
+
+\newcommand{\SV}[2]{\setproperty{var}{#1}{#2}}
+\newcommand{\GV}[1]{\getproperty{var}{#1}}
+
+\newcommand{\bpm}{\begin{pmatrix}}
+\newcommand{\epm}{\end{pmatrix}}
+\newcommand{\Vek}[1]{\bpm #1 \epm}
+\newcommand{\Cases}[1]{\begin{dcases}#1\end{dcases}}
+
+%% First Page Information
+\author{Oscar Petersson\\Matteus Laurent}
+\title{TDTS04 - Lab 4}
+\date{\today}
+\newcommand{\course}{Computer Networks and Distributed Systems}
+\newcommand{\coursenumber}{TDTS04, Linköping University}
+%\newcommand{\programme}{Högskoleingenjörsutbildning i datateknik, 180 hp}
+\newcommand{\examiner}{Meysam Aghighi}
+\newcommand{\institution}{IDA}
+\newcommand{\reptype}{Laboration Report}
+
+%%% Document %%%
+\begin{document}
+
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{3}
+
+%%% Default Values %%%
+
+%% Custom titlepage, empty backside, do not use with \maketitle
+\pagestyle{empty}
+  \makeatletter\begin{center}~\vfill
+  \Large{\@author}\vskip .3cm
+  \textbf{\LARGE{\@title}}\vskip .2cm
+ % \large{\programme}
+  \vfill
+\end{center}
+\reptype{} - \@date\hfill Teacher's Assistant:\\
+\textbf{\course}\hfill\examiner\\
+\coursenumber\hfill\institution
+\makeatother
+\newpage
+
+%% Table of Contents
+\addtocontents{toc}{\protect\hypertarget{toc}{}}
+\tableofcontents\label{sec:toc}
+\addtocontents{toc}{\protect\thispagestyle{empty}}
+\cleardoublepage
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\pagestyle{plain}
+\setcounter{page}{1}
+
+\section{The Basics of Distance Vector Routing}
+Distance vector routing is an algorithm for routing that isolates nodes in terms of their knowledge of the network as a whole.\cite{Kurose} Routing is decentralized and local, meaning exchange of information only directly happens between neighbouring nodes. Full network information is never spread - in update messages to neighbours, a node only includes the distances of its own routing table entries.
+
+Optimal routing can thus take some time to converge, but aside from a few specific issues (to be solved with proper implementation) the information that propagates through the network is fairly limited, simple and efficient. Likewise, local updates are easy to calculate.
+
+For node $x$ to determine the best route to a node $y$ in the network, the Bellman-Ford equation is used, where
+
+$D_x(y) = \min\{ c(x,v) + D_v(y) \}$
+
+for all $x$'s neighbours $v$. Or in words: 
+"The shortest distance from node $x$ to node $y$ is attained by the smallest sum of: the link cost between $x$ and any node $v$ and that node $v$'s shortest distance to node $y$."
+
+
+\section{Testing during Implementation}
+Not many unexpected problems arose during the implementation that had to do with interpretation issues of the algorithm. Discussions amongst ourselves and with other lab groups led to the immediate addition of necessary help structures, as well as the very important distinction between the terms link cost, distance and route (distance coupled with a first hop).
+\begin{itemize}
+\item The \verb=int=-array \verb=costs= was renamed to \verb=linkcosts=.
+\item  A 2-dimensional \verb=int=-array was used as a table for received neighbour information: "Best distance to node $x$ of neighbour $y$".
+\item  A boolean-array, \verb=isNeighbour= was made part of the construction of a router node. Used to skip pointless calculations as well as determining the recipients of the \verb=sendUpdate()= method.
+\item  A \verb=RouteEntry=-array, where the \verb=RouteEntry= class is a pseudo-'struct' of two \verb=ints= (\verb=firsthop= and \verb=distance=).
+\end{itemize}
+
+The \verb=RouteEntry= class caused some very unexpected behaviour that expressed itself in weird ways. Ultimately, each element had to be assigned individually, rendering the choice of implementing the \verb=RouteEntry= class fairly pointless. Lesson to be learned: Any non-primitive datatypes in Java need to not be loosely defined.
+
+
+\section{A problem with poisoned reverse and the basic implementation}
+With the most simple implementation of a distance vector routing algorithm in a network, a few issues arise:
+\begin{itemize}
+  \item Redundant routing update packets. Solved with \emph{split horizon}\cite{tcpip} - if $A$ informs $B$ of a routing change, $B$ should not need to inform $A$ of a routing change of $B$ as a direct result of that update.
+  \item  The \emph{"count-to-infinity"} problem. Solved with \emph{poisoned reverse} - while $A$ is currently routing through $B$ to $C$, $A$ will in its updates to $B$ say that $A$'s distance to $C$ is infinite, so that $B$ won't atempt to route to $C$ through $A$. Trying to route through each other will obviously lead to bouncing data and router update packets (especially the router update packets will propagate and potentially create a lot of unnecessary network exchange). The routing updates essentially "count to infinity" by slowly incrementing the distance of the route for each update: "$B$'s distance to $C$ is now $x$? This means my, $A$'s, distance to $C$ is now $x+1$. Better tell $B$ quick!".
+\end{itemize}
+\subsection{Where Poison Reverse Fails}
+Routing loops. Solved by \emph{hold down}\cite{tcpip}---whenever a route gets worse, the local router should not change its route immediately, only update the distance (and consequently send out the update). This is to allow the news to propagate through the network before potentially rerouting. With \emph{poison reverse}, if we reroute immediately, we can't route to a node $i$ through a node that is routing through us to that same node $i$. However, we could still "route through ourselves" by routing through a node that is indirectly routing through us to a node $i$. This creates a routing loop with symptoms similar to \emph{counting to infinity}. See Figure \ref{pic1}.
+
+\begin{figure}[h]
+  \centering
+  \begin{tikzpicture}[scale=1.7]
+    \draw (1,1)--(0,0)--(0,2)--(1,1)--(2,1);
+    \draw[fill=white] (1,1) circle (.125) node{3};
+    \draw[fill=white] (2,1) circle (.125) node{$i$};
+    \draw[fill=white] (0,2) circle (.125) node{2};
+    \draw[fill=white] (0,0) circle (.125) node{1};
+    \draw[->] (2.125,1)--(3,1) node[anchor=west]{$C$};
+
+    \draw[dashed,gray] (3.5,2)--(3.5,0);
+    
+    \draw (5,1)--(4,0)--(4,2)--(5,1)--(6,1);
+    \draw[fill=white] (5,1) circle (.125) node{3};
+    \draw[fill=white] (6,1) circle (.125) node{$i$};
+    \draw[fill=white] (4,2) circle (.125) node{2};
+    \draw[fill=white] (4,0) circle (.125) node{1};
+    \draw[color=red] (5.25,1.25)--(5.75,.75);
+    \draw[color=red] (5.75,1.25)--(5.25,.75);
+    \draw[->] (6.125,1)--(7,1) node[anchor=west]{$C$};
+
+  \end{tikzpicture}
+  \caption{In case of a lost connection between nodes 3 and $i$, node 1 would still consider node 2 to be a valid route to $i$. \emph{Hold down} lets the news propagate through the system before rerouting.}
+  \label{pic1}
+\end{figure}
+
+
+%<pretty pictures>
+
+
+%   *
+%   |\ 
+%   | \ -->
+%   |  *---*   $C$ and stuff
+%   | /
+%   |/
+%   *
+
+%   _
+% ^  \
+% | * \
+% | |\ \
+% | | \ v---->
+% | |  *-x-*   $C$ and stuff
+% | | / 
+% | |/ /
+% | * /
+% |_ v
+
+
+When the route gets worse, we can set a timer for a route which within its duration prohibits rerouting of that route, and/or possibly "schedules" the first allowed rerouting of that route. Letting the news propagate before any rerouting means we won't try and calculate a new best route with information that is outdated and indirectly routes through us, preventing loops. This temporary prohibition of rerouting when a route gets worse needs to be applied on worsened routes and not only on nodes next to the worsened link change---consider the pictures above and assume the actual link change happened somewhere in network $C$.
+%\thebibliography
+\bibliographystyle{plain}
+\bibliography{refs}
+
+\end{document}
