@@ -109,24 +109,24 @@
 %%% Default Values %%%
 
 %% Custom titlepage, empty backside, do not use with \maketitle
-\pagestyle{empty}
-  \makeatletter\begin{center}~\vfill
-  \Large{\@author}\vskip .3cm
-  \textbf{\LARGE{\@title}}\vskip .2cm
- % \large{\programme}
-  \vfill
-\end{center}
-\reptype{} - \@date\hfill Teacher's Assistant:\\
-\textbf{\course}\hfill\examiner\\
-\coursenumber\hfill\institution
-\makeatother
-\newpage
+%\pagestyle{empty}
+%  \makeatletter\begin{center}~\vfill
+%  \Large{\@author}\vskip .3cm
+%  \textbf{\LARGE{\@title}}\vskip .2cm
+% % \large{\programme}
+%  \vfill
+%\end{center}
+%\reptype{} - \@date\hfill Teacher's Assistant:\\
+%\textbf{\course}\hfill\examiner\\
+%\coursenumber\hfill\institution
+%\makeatother
+%\newpage
 
 %% Table of Contents
-\addtocontents{toc}{\protect\hypertarget{toc}{}}
-\tableofcontents\label{sec:toc}
-\addtocontents{toc}{\protect\thispagestyle{empty}}
-\cleardoublepage
+%\addtocontents{toc}{\protect\hypertarget{toc}{}}
+%\tableofcontents\label{sec:toc}
+%\addtocontents{toc}{\protect\thispagestyle{empty}}
+%\cleardoublepage
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -146,7 +146,7 @@ for all $x$'s neighbours $v$. Or in words:
 "The shortest distance from node $x$ to node $y$ is attained by the smallest sum of: the link cost between $x$ and any node $v$ and that node $v$'s shortest distance to node $y$."
 
 
-\section{Testing during Implementation}
+\section{Testing During Implementation}
 Not many unexpected problems arose during the implementation that had to do with interpretation issues of the algorithm. Discussions amongst ourselves and with other lab groups led to the immediate addition of necessary help structures, as well as the very important distinction between the terms link cost, distance and route (distance coupled with a first hop).
 \begin{itemize}
 \item The \verb=int=-array \verb=costs= was renamed to \verb=linkcosts=.
@@ -158,19 +158,19 @@ Not many unexpected problems arose during the implementation that had to do with
 The \verb=RouteEntry= class caused some very unexpected behaviour that expressed itself in weird ways. Ultimately, each element had to be assigned individually, rendering the choice of implementing the \verb=RouteEntry= class fairly pointless. Lesson to be learned: Any non-primitive datatypes in Java need to not be loosely defined.
 
 
-\section{A problem with poisoned reverse and the basic implementation}
+\section{A Problem with Poisoned Reverse and the Basic Implementation}
 With the most simple implementation of a distance vector routing algorithm in a network, a few issues arise:
 \begin{itemize}
   \item Redundant routing update packets. Solved with \emph{split horizon}\cite{tcpip} - if $A$ informs $B$ of a routing change, $B$ should not need to inform $A$ of a routing change of $B$ as a direct result of that update.
   \item  The \emph{"count-to-infinity"} problem. Solved with \emph{poisoned reverse} - while $A$ is currently routing through $B$ to $C$, $A$ will in its updates to $B$ say that $A$'s distance to $C$ is infinite, so that $B$ won't atempt to route to $C$ through $A$. Trying to route through each other will obviously lead to bouncing data and router update packets (especially the router update packets will propagate and potentially create a lot of unnecessary network exchange). The routing updates essentially "count to infinity" by slowly incrementing the distance of the route for each update: "$B$'s distance to $C$ is now $x$? This means my, $A$'s, distance to $C$ is now $x+1$. Better tell $B$ quick!".
 \end{itemize}
-\subsection{Where Poison Reverse Fails}
-Routing loops. Solved by \emph{hold down}\cite{tcpip}---whenever a route gets worse, the local router should not change its route immediately, only update the distance (and consequently send out the update). This is to allow the news to propagate through the network before potentially rerouting. With \emph{poison reverse}, if we reroute immediately, we can't route to a node $i$ through a node that is routing through us to that same node $i$. However, we could still "route through ourselves" by routing through a node that is indirectly routing through us to a node $i$. This creates a routing loop with symptoms similar to \emph{counting to infinity}. See Figure \ref{pic1}.
+\subsection{Where Poisoned Reverse Fails}
+Routing loops. Solved by \emph{hold down}\cite{tcpip}---whenever a route gets worse, the local router should not change its route immediately, only update the distance (and consequently send out the update). This is to allow the news to propagate through the network before potentially rerouting. With \emph{poisoned reverse} implemented, if we reroute immediately, we can't route to a node $i$ through a node that is routing through us to that same node $i$. However, we could still "route through ourselves" by routing through a node that is indirectly routing through us to a node $i$. This creates a routing loop with symptoms similar to \emph{counting to infinity}. See Figure \ref{pic1}.
 
 \begin{figure}[h]
   \centering
   \begin{tikzpicture}[scale=1.7]
-    \draw (1,1)--(0,0)--(0,2)--(1,1)--(2,1);
+    \draw (1,1)--(0,0) node[pos=.5, anchor=north]{3}--(0,2)node[pos=.5, anchor=east]{1}--(1,1)node[pos=.5, anchor=south]{1}--(2,1)node[pos=.5,anchor=north]{1};
     \draw[fill=white] (1,1) circle (.125) node{3};
     \draw[fill=white] (2,1) circle (.125) node{$i$};
     \draw[fill=white] (0,2) circle (.125) node{2};
@@ -189,7 +189,7 @@ Routing loops. Solved by \emph{hold down}\cite{tcpip}---whenever a route gets wo
     \draw[->] (6.125,1)--(7,1) node[anchor=west]{$C$};
 
   \end{tikzpicture}
-  \caption{In case of a lost connection between nodes 3 and $i$, node 1 would still consider node 2 to be a valid route to $i$. \emph{Hold down} lets the news propagate through the system before rerouting.}
+  \caption{In case of a lost connection between nodes 3 and $i$, node 1 would still consider node 2 to be a valid route to $i$. \emph{Hold down} lets the news propagate through the system before rerouting, instead of allowing 3 to reroute through 1 to reach $i$.}
   \label{pic1}
 \end{figure}
 
