@@ -8,7 +8,7 @@
 
 NAME = Chat
 
-NAMESERVERPORT = 1050
+NAMESERVERPORT = 8050
 
 JAVA  = /usr/bin/java
 JAVAC = /usr/bin/javac
@@ -18,10 +18,10 @@ GENERATED = $(NAME)App
 
 all: 
 	-@ echo "  "
-	-@ echo "  make target             - build the project"
+	-@ echo "  make target               - build the project"
 	-@ echo "  make orbd|client|server - run the individual components"
-	-@ echo "  make clean              - clean temporary files"
-	-@ echo "  make clobber            - wipe everything that is generated"
+	-@ echo "  make clean                - clean temporary files"
+	-@ echo "  make clobber              - wipe everything that is generated"
 	-@ echo "  "
 
 
@@ -34,7 +34,7 @@ clobber: clean
 	-@rm -rf *.class $(GENERATED) orb.db
 
 idl::
-	-$(IDLJ) -fall $(NAME).idl	
+	-$(IDLJ) -fall $(NAME).idl
 
 c::
 	$(JAVAC) $(NAME)Client.java  $(NAME)App/*.java
