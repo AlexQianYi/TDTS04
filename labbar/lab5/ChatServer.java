@@ -10,7 +10,7 @@ class ChatImpl extends ChatPOA
 {
   private ORB orb;
   Map<String, ChatCallback> clients = new HashMap<String, ChatCallback>();
-    //  Game game = new Game();
+      Game game = new Game();
   
   public void setORB(ORB orb_val) {
     orb = orb_val;
@@ -19,7 +19,7 @@ class ChatImpl extends ChatPOA
   public String join(ChatCallback objref, String nickname)
   {    
     if(clients.containsKey(nickname)){
-      objref.callback(nickname + " is already an active chatter");
+      objref.callback("\u001b[31;1m" + nickname + " is already an active chatter\u001b[0m");
       return "active";
     }
     for (ChatCallback callback : clients.values())
@@ -61,7 +61,7 @@ class ChatImpl extends ChatPOA
     objref.callback("Cheers " + nickname);
   }
 
-    /*
+    
   public void play(ChatCallback objref, String nickname, String color)
   {
     game.join(objref, nickname, color);
@@ -74,7 +74,7 @@ class ChatImpl extends ChatPOA
   {
     game.leave(nickname);
   }
-    */
+    
 }
 
 public class ChatServer 
@@ -116,7 +116,7 @@ public class ChatServer
     }
 	    
     catch(Exception e) {
-      System.err.println("ERROR : " + e);
+      System.err.println("\u001b[31;1mERROR : " + e + "\u001b[30m");
       e.printStackTrace(System.out);
     }
 

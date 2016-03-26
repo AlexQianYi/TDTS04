@@ -67,7 +67,7 @@ public class ChatClient
 
         if (input[0].equals("join")){
           if (input.length < 2){
-            System.out.println("no name given at command line ");
+            System.out.println("\u001b[31;1m No name given at command line!\u001b[0m");
           }
           else if (!Active){
             nickname = chatImpl.join(cref, input[1]);
@@ -76,7 +76,7 @@ public class ChatClient
             }
           }
           else{
-            System.out.println("Don't join twice, " + nickname);
+            System.out.println("\u001b[31;1mDon't join twice, " + nickname + "\u001b[0m");
           }
         }
     
@@ -89,7 +89,7 @@ public class ChatClient
             chatImpl.post(cref, nickname, msg);
           }
           else{
-            System.out.println("Go active first!");
+            System.out.println("\u001b[31;1mGo active first!\u001b[0m");
           }
         }
         
@@ -108,7 +108,7 @@ public class ChatClient
             }
           }
           else{
-            System.out.println("Join before leaving!");
+            System.out.println("\u001b[31;1mJoin before leaving!\u001b[0m");
           }
         }     
 
@@ -121,7 +121,7 @@ public class ChatClient
             }
           }
           else{
-            System.out.println("Join first omg");
+            System.out.println("\u001b[31;1mJoin first omg\u001b[0m");
           }
         }
         
@@ -133,7 +133,7 @@ public class ChatClient
                 chatImpl.put(cref, nickname, pos);
               }
               else{
-                System.out.println("Only 2-digit numeric chars allowed");
+                System.out.println("\u001b[31;1mOnly 2-digit numeric chars allowed\u001b[0m");
               }
             }
             else{
@@ -141,7 +141,7 @@ public class ChatClient
             }
           }
           else{
-            System.out.println("Join a game first");
+            System.out.println("\u001b[31;1mJoin a game first\u001b[0m");
           }
         }
 
@@ -151,13 +151,13 @@ public class ChatClient
             System.exit(0);
           }
           else{
-            System.out.println(nickname + "Active, leave first");
+            System.out.println(nickname + "\u001b[31;1mActive, leave first!\u001b[0m");
           }
         } 
       }              
     }
     catch(Exception e){
-      System.out.println("ERROR : " + e);
+      System.out.println("\u001b[31;1mERROR : " + e + "\u001b[0m");
       e.printStackTrace(System.out);
      }
   }
