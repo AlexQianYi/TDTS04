@@ -14,4 +14,4 @@ ninnyprint
 *.out
 *.toc
 *.db
-*ChatApp/*
+./labbar/lab5/ChatApp/
