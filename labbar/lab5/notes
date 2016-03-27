@@ -2,7 +2,12 @@ Chat	Game
 ===================
 join	join
 leave	leave
-post	makemove
+post	makemove (put)
 list	reset
-	pass
+quit	pass
 	list
+
+Error 31
+ServChatback 36
+ServAnnounce 33
+NickSays 34;1 : 0
