@@ -13,3 +13,5 @@ ninnyprint
 *.log
 *.out
 *.toc
+*.db
+*ChatApp/*

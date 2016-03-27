@@ -5,7 +5,11 @@ import org.omg.CORBA.*;     // All CORBA applications need these classes.
 import org.omg.PortableServer.*;   
 import org.omg.PortableServer.POA;
 import java.util.*;
- 
+
+/*
+For each method Callbacking, add try-catch<client.remove> 
+ */
+
 class ChatImpl extends ChatPOA
 {
   private ORB orb;

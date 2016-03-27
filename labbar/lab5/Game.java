@@ -2,8 +2,8 @@ import ChatApp.*;
 import java.util.*;
 
 class Game{
-  private static int maxX = 9; // W
-  private static int maxY = 9; // H
+  private static int maxX = 8; // W
+  private static int maxY = 8; // H
   // Players?
   public Map<String, ChatCallback> players = new HashMap<String, ChatCallback>();
   // Colors?
