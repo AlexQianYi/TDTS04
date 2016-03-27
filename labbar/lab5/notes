@@ -1,0 +1,8 @@
+Chat	Game
+===================
+join	join
+leave	leave
+post	makemove
+list	reset
+	pass
+	list
