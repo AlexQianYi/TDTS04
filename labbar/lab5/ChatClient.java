@@ -59,19 +59,20 @@ public class ChatClient {
 
 	    System.out.println("\u001b[32;1m\n" 
 			       + "Welcome to ShitShat!\n"
-			       + "Commands available:\n\u001b[0m"
-			       + "join\n"
-			       + "post\n"
-			       + "list\n"
-			       + "play\n" 
-			       + "put\n"
-			       + "quit\n");
-          
+			       + "Commands available: (shorts available with \\ , i.e. \\j to join)\n\u001b[0m"
+			       + "(j)oin <nick>           \u001b[35mJoin chat \u001b[0m\n"
+			       + "pos(t) <msg>            \u001b[35mPost to chat \u001b[0m\n"
+			       + "(l)ist                  \u001b[35mList connected users \u001b[0m\n"
+			       + "pl(a)y <color>          \u001b[35mPlay game \u001b[0m\n" 
+			       + "lea(v)e                 \u001b[35mLeave chat \u001b[0m\n"
+			       + "(p)ut <coordinate XY>   \u001b[35mMake a move \u001b[0m\n"
+			       + "(q)uit                  \u001b[35mQuit ShitShat \u001b[0m\n");
+	    //leave
 	    while(true){
               
 		input = in.nextLine().split(" ");
 
-		if (input[0].equals("join")){
+		if (input[0].equals("join") || input[0].equals("\\j")){
 		    if (input.length < 2){
 			System.out.println("\u001b[31;1m No name given at command line!\u001b[0m");
 		    }
@@ -86,7 +87,7 @@ public class ChatClient {
 		    }
 		}
     
-		if (input[0].equals("post")){
+		if (input[0].equals("post") || input[0].equals("\\t")){
 		    if (Active){
 			String msg = "";
 			for(int i= 1; i < input.length; i++) {
@@ -99,11 +100,11 @@ public class ChatClient {
 		    }
 		}
         
-		if (input[0].equals("list")){
+		if (input[0].equals("list") || input[0].equals("\\l")){
 		    chatImpl.list(cref, nickname );
 		}
         
-		if (input[0].equals("leave")){
+		if (input[0].equals("leave") || input[0].equals("\\v")){
 		    if (Active){
 			chatImpl.leave(cref, nickname);
 			Active = false;
@@ -118,7 +119,7 @@ public class ChatClient {
 		    }
 		}     
 
-		if(input[0].equals("play")){
+		if(input[0].equals("play") || input[0].equals("\\a")){
 		    if (Active){
 			if (input.length > 1){
 			    String color = input[1].substring(0,1);
@@ -131,7 +132,7 @@ public class ChatClient {
 		    }
 		}
 		//Note-to-self: int (char(a)) == 97
-		if (input[0].equals("put")){
+		if (input[0].equals("put") || input[0].equals("\\p")){
 		    if (Playing){
 			if (input.length > 1){
 			    String pos = input[1];
@@ -151,7 +152,7 @@ public class ChatClient {
 		    }
 		}
 
-		if (input[0].equals("quit")){
+		if (input[0].equals("quit") || input[0].equals("\\q")){
 		    if (Active){
 			chatImpl.leave(cref, nickname);
 			Active = false;
