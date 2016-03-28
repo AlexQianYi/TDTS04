@@ -99,7 +99,8 @@ class ChatImpl extends ChatPOA {
 	objref.callback("Cheers " + nickname);
     }
 
-    
+    // Game stuff, yet to be fixed omg!
+    /*
     public void play(ChatCallback objref, String nickname, String color){
 	game.join(objref, nickname, color);
     }
