@@ -36,17 +36,16 @@ class GameImpl extends GamePOA
 	this.orb = orb;
     }
 
-    public void join(ChatCallback chatref, GameCallback gbref, String nickname, char colour)
+    public boolean join(ChatCallback chatref, GameCallback gbref, String nickname, char colour)
     {
 	if (clients.containsKey(nickname)) {
 	    //Already playing
 	    chatref.callback("\u001b[31;1m" + nickname + " is playing already!\u001b[0m");
+	    return false;
 	}
 	else {
 	    clients.put(nickname, gbref);
 	    players.put(nickname, colour);
-	    //Start game window for player
-	    gbref.startgame(nickname, colour);
 	    //Announce
 	    for (ChatCallback client : chatImpl.clients.values()) {
 		if (client != chatref)
@@ -55,15 +54,16 @@ class GameImpl extends GamePOA
 		    client.callback("Joined Othello.");
 	    }
 	    //Send gameboard data to player 
-	    gbref.boardupdate(gameBoard); 
+	    gbref.boardupdate(gameBoard);
+	    return true;
 	}
     }
 
-    public void makemove(ChatCallback chatref, String nickname, String move)
+    public boolean makemove(ChatCallback chatref, String nickname, String move)
     {
 	if (players.get(nickname) != activeColour) {
 	    chatref.callback("It's not your turn.");
-	    return;
+	    return false;
 	}
 	
 	int x = move[0] - 97; //int(char('a')) == 97
@@ -71,12 +71,12 @@ class GameImpl extends GamePOA
 
 	if (!inbounds(x, y)) {
 	    chatref.callback("Out of bounds.");
-	    return;
+	    return false;
 	}
 
 	if (legalMoves[x][y] == false) {
 	    chatref.callback("You can't make that move.");
-	    return;
+	    return false;
 	}
 
 	//Perform move
@@ -94,6 +94,7 @@ class GameImpl extends GamePOA
 	    gbref.boardupdate(gameBoard);
 	}
   
+	return true;
     }
 
     public void passturn()
