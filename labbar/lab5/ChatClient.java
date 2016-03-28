@@ -140,7 +140,7 @@ public class ChatClient {
 		    if (Playing){
 			if (input.length > 1){
 			    String pos = input[1];
-			    if (pos.matches("([a-h]|[A-H])+([1-8])")){
+			    if (pos.matches("([a-h]|[A-H])+([1-8])")){ // Om vi bara vill tillåta a-h, ta bort |[A-H]
 				chatImpl.put(cref, nickname, pos);
 			    }
 			    else{
