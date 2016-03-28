@@ -30,6 +30,11 @@ class ChatImpl extends ChatPOA {
 	    }
 	    catch(Exception e){
 		System.out.println("\u001b[31;1mLost connection to peer! \u001b[0m");
+		for(Iterator<Map.Entry<String,ChatCallback>>it = clients.entrySet().iterator(); it.hasNext(); ){
+		    Map.Entry<String, ChatCallback> entry = it.next();
+		    it.remove();
+		}
+		
 	    }
 	}
     
@@ -38,6 +43,13 @@ class ChatImpl extends ChatPOA {
 	return nickname;
     
     }
+
+    public void ping(ChatCallback objref, String nickname) {
+	if(!(clients.containsKey(nickname))){
+	    clients.put(nickname, objref);
+	    objref.callback("\u001b[31;6mSomething has gone wrong, reconnecting... \u001b[0m" );
+	}
+    }
   
     public void post(ChatCallback objref, String nickname, String msg){
 	for (ChatCallback callback : clients.values()) {
@@ -45,7 +57,11 @@ class ChatImpl extends ChatPOA {
 		callback.callback("\u001b[34;1m" + nickname + ":\u001b[0m" + msg);
 	    }
 	    catch(Exception e){
-		System.out.println("\u001b[31;1mWe've lost a peer! \u001b[0m");
+		System.out.println("\u001b[31;1mLost connection to peer! \u001b[0m");
+		for(Iterator<Map.Entry<String,ChatCallback>>it = clients.entrySet().iterator(); it.hasNext(); ){
+		    Map.Entry<String, ChatCallback> entry = it.next();
+		    it.remove();
+		}
 	    }
 	    
 	}   
@@ -66,7 +82,11 @@ class ChatImpl extends ChatPOA {
 		callback.callback("\u001b[33m" + nickname + " has left.\u001b[0m"); // broadcast message
 	    }
 	    catch(Exception e){
-		System.out.println("\u001b[31;1mWe've lost a peer! \u001b[0m");
+		System.out.println("\u001b[31;1mLost connection to peer! \u001b[0m");
+		for(Iterator<Map.Entry<String,ChatCallback>>it = clients.entrySet().iterator(); it.hasNext(); ){
+		    Map.Entry<String, ChatCallback> entry = it.next();
+		    it.remove();
+		}
 	    }
 	}
 	

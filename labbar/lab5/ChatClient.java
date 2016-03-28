@@ -72,6 +72,10 @@ public class ChatClient {
               
 		input = in.nextLine().split(" ");
 
+		if (Active) {
+		    chatImpl.ping(cref, nickname);
+		}
+
 		if (input[0].equals("join") || input[0].equals("\\j")){
 		    if (input.length < 2){
 			System.out.println("\u001b[31;1m No name given at command line!\u001b[0m");
