@@ -6,7 +6,6 @@ import org.omg.PortableServer.*;
 import org.omg.PortableServer.POA;
 import java.util.*;
 
-//TO ADD: GameCallback för server RMIs på client-gameboards
 
 class GameImpl extends GamePOA
 {
@@ -21,12 +20,13 @@ class GameImpl extends GamePOA
     private char[][] gameBoard = new char[maxX][maxY];
     private boolean[][] legalMoves = new boolean[maxX][maxY];
     private char activeColour;
+    private char opposingColour;
 
     //*** Initialization, Construction ***
     public GameImpl(ChatImpl chatImpl)
     {
 	this.chatImpl = chatImpl;
-	resetgame();
+	reset();
     }
 
 
@@ -51,15 +51,15 @@ class GameImpl extends GamePOA
 		    client.callback(nickname + " is now playing Othello on team " + colour  + "!");
 		else
 		    client.callback("Joined Othello.");
-	    }   
-	    // RMI update/print board!
+	    }
+	    //Send gameboard data   
+	    gbref.boardupdate(gameBoard);   
 	}
     }
 
     public void makemove(ChatCallback chatref, String nickname, String move)
     {
 	if (players.get(nickname) != activeColour) {
-	    //Wrong turn
 	    chatref.callback("It's not your turn.");
 	    return;
 	}
@@ -67,43 +67,69 @@ class GameImpl extends GamePOA
 	int x = move[0] - 97; //int(char('a')) == 97
 	int y = move[1] - 1;  //1 to 8 --> 0 to 7
 
-	if ( (x<0 || y<0) ||
-	    (x>(maxX-1) || y>(maxY-1)) ) {
-	    //Out of bounds
+	if (!inbounds(x, y)) {
 	    chatref.callback("Out of bounds.");
 	    return;
 	}
 
 	if (legalMoves[x][y] == false) {
-	    //Illegal move
 	    chatref.callback("You can't make that move.");
 	    return;
 	}
 
 	//Perform move
 	gameBoard[x][y] = activeColour;
-	flip_affected(x, y); // TO ADD: private flip_affected
+	flip_affected(x, y);
 
 	//Turn change
-	if (activeColour == 'o')
-	    activeColour = 'x';
-	else
-	    activeColour = 'o';
+	turn_change_ao(opposingColour, activeColour);
 
+	//Calculate legal moves for next turn.
 	calc_legalMoves();
 
 	//Update client gameboards
-	/* Put code here */
+	for (GameCallback gbref : clients.values()) {
+	    gbref.boardupdate(gameBoard);
+	}
   
     }
 
-    public void passturn() //TO ADD
+    public void passturn()
     {
+	//Turn change
+	turn_change_ao(opposingColour, activeColour);
+
+	//Calculate legal moves for next turn.
+	calc_legalMoves();
     }
 
-    //TO ADD: list()
+    public void list(ChatCallback chatref)
+    {	
+	Set<String> playersSet = players.keySet();
+	Iterator<String> it = playersSet.iterator();
+	Vector<String> teamx;
+	Vector<String> teamo;
+	String temp;
+	
+	while (it.hasNext()) {
+	    temp = it.next();
+	    if (players(temp) == 'x')
+		teamx.add(temp);
+	    else
+		teamo.add(temp);
+	}
 
-    public void leave(String nickname)
+	chatref.callback(players.size() + " players playing Othello.");
+	chatref.callback("Team x:");
+	for (String player : teamx)
+	    chatref.callback(player);
+
+	chatref.callback("Team o:");
+	for (String player : teamo)
+	    chatref.callback(player);	
+    }
+
+    public void leave(ChatCallback chatref, String nickname)
     {
         clients.remove(nickname);
 	players.remove(nickname);
@@ -115,20 +141,105 @@ class GameImpl extends GamePOA
 	}
     }
 	
-    public void resetgame()
+    public void reset()
     {
-	for(char[] column : gameBoard){
+	//Reset pieces.
+	for (char[] column : gameBoard){
 	    Arrays.fill(column, ".");
 	}
-	// place starting pieces
-	// set legalmoves
-	// set activeColour
+	gameBoard[3][3] = 'x';
+	gameBoard[3][4] = 'o';
+	gameBoard[4][3] = 'o';
+	gameBoard[4][4] = 'x';
+ 
+	//x is first to act.
+	turn_change_ao('x', 'o');
+
+	//Calculate legal moves for next turn.
+	calc_legalMoves();
+
+	//Update client gameboards
+	for (GameCallback gbref : clients.values()) {
+	    gbref.boardupdate(gameBoard);
+	}
     }
     
+    private boolean inbounds(int x, int y)
+    {
+	return (x >= 0 &&
+		y >= 0 &&
+		x < maxX &&
+		y < maxY);	
+    }
+
+    private void turn_change_ao(char newactive, char newopposing)
+    {
+	activeColour = newactive;
+	opposingColour = newopposing;
+    }
+
     private void calc_legalMoves()
     {
+	for (int x = 0 ; x < maxX ; ++x) {
+	    for (int y = 0; y < maxY ; ++y) {
+		//(x,y) is illegal until we prove it's not.
+		legalMoves[x][y] = false;
 
+		//Check all immediate neighbouring squares (x+i,y+j).
+		outerloop:
+		for (int i = -1 ; i < 2 ; ++i) {
+		    for (int j = -1 ; j < 2 ; ++j) {
+			if (inbounds(x+i, y+j)) {
+			    if (gameBoard[x+i][y+j] == opposingColour) {
+				//Opposing piece found in neighbouring square, direction (i,j).
+				for (int n = 1 ; inbounds(x+n*i, y+n*j) ; ++n) {
+				    //Check if consecutive line of opposing piece can be made in direction (i,j) to a friendly piece.
+				    if (gameboard[x+n*i][y+n*j] == opposingColour)
+					continue;
+				    if (gameboard[x+n*i][y+n*j] == '.')
+					break;
+				    if (gameboard[x+n*i][y+n*j] == activeColour) {
+					//Sequence of o x ... x o or vice versa found. (x,y) is a legal move.
+					legalMoves[x][y] = true;
+					break outerloop;
+				    }
+				}
+		
+			    }		
+			}
+		    }
+		}
+	    }
+	}
+    }
 
+    private void flip_affected(int x, int y)
+    {
+	//Check all immediate neighbouring squares (x+i,y+j).
+	for (int i = -1 ; i < 2 ; ++i) {
+	    for (int j = -1 ; j < 2 ; ++j) {
+		if (inbounds(x+i, y+j)) {
+		    if (gameBoard[x+i][y+j] == opposingColour) {
+			//Opposing piece found in neighbouring square, direction (i,j).
+			for (int n = 1 ; inbounds(x+n*i, y+n*j) ; ++n) {
+			    //Check if consecutive line of opposing piece can be made in direction (i,j) to a friendly piece.
+			    if (gameboard[x+n*i][y+n*j] == opposingColour)
+				continue;
+			    if (gameboard[x+n*i][y+n*j] == '.')
+				break;
+			    if (gameboard[x+n*i][y+n*j] == activeColour) {
+				//Sequence of o x ... x o or vice versa found. Flip pieces.
+				for (int m = 1 ; m < n ; ++m) {
+				    gameBoard[x+m*i][y+m*j] = activeColour;
+				}
+				break;
+			    }
+			}
+		
+		    }		
+		}
+	    }
+	}
     }
 
 }
