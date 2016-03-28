@@ -45,6 +45,8 @@ class GameImpl extends GamePOA
 	else {
 	    clients.put(nickname, gbref);
 	    players.put(nickname, colour);
+	    //Start game window for player
+	    gbref.startgame(nickname, colour);
 	    //Announce
 	    for (ChatCallback client : chatImpl.clients.values()) {
 		if (client != chatref)
@@ -52,8 +54,8 @@ class GameImpl extends GamePOA
 		else
 		    client.callback("Joined Othello.");
 	    }
-	    //Send gameboard data   
-	    gbref.boardupdate(gameBoard);   
+	    //Send gameboard data to player 
+	    gbref.boardupdate(gameBoard); 
 	}
     }
 

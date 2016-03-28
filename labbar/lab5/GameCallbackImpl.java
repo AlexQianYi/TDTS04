@@ -28,6 +28,16 @@ class GameCallbackImpl extends GameCallbackPOA
 	this.gbGUI = gbgui;
     }
 
+    public void startgame(String nickname, char colour)
+    {
+	gbGUI = new GuiTextArea("Othello - " + nickname + " on team " + colour);
+    }
+    
+    public void closegame()
+    {
+	gbGUI = null;
+    }
+
     public void boardupdate(char[][] gb)
     {
 	for (int i = 0 ; i < maxX ; ++i) {
