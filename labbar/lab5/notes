@@ -1,13 +1,15 @@
-Chat	Game
-===================
-join	join
-leave	leave
-post	makemove (put)
-list	reset
-quit	pass
-	list
-
 Error 31
 ServChatback 36
 ServAnnounce 33
 NickSays 34;1 : 0
+
+# (Om tid över: ny undantagsklass)
+# "Game" i NS. Referens till GameImpl hos server.
+# Varje client: Object gref = rootpoa.servant_to_reference("gameCallbackImpl")
+# GameCallback gref = GameCallbackHelper.narrow(ref) // kan vi återanvända ref?
+# ChatClient:: Game gameImpl [resolve it]
+  -- & Create servant
+# Motsv. på serversidan
+
+# Uppdatera available commands
+# Städa ... :p

@@ -73,10 +73,6 @@ public class ChatClient {
               
 		input = in.nextLine().split(" ");
 
-		if (Active) { // Reconnect if server lost registry
-		    chatImpl.ping(cref, nickname);
-		}
-
 		// Join
 		if (input[0].equals("join") || input[0].equals("\\j")){
 		    if (input.length < 2){

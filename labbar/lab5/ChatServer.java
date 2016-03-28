@@ -27,14 +27,14 @@ class ChatImpl extends ChatPOA {
 	    }
 	    catch(Exception e){
 		/* 
-		   Well, dirty but ... 
-		   If we lose a peer, and subsequently can't callback to it,
-		   we reset the entry list and let the clients re-register with ping().
+		   Remove zombie peers
 		 */
 		System.out.println("\u001b[31;1mLost connection to peer! \u001b[0m");
-		for(Iterator<Map.Entry<String,ChatCallback>>it = clients.entrySet().iterator(); it.hasNext(); ){
-		    Map.Entry<String, ChatCallback> entry = it.next();
-		    it.remove();
+		for(Iterator<Map.Entry<String,ChatCallback>> it = clients.entrySet().iterator(); it.hasNext(); ){
+		    if( clients.get(it.next()) == callback ) {
+			it.remove();
+			break;
+		    }
 		}
 		
 	    }
@@ -46,14 +46,6 @@ class ChatImpl extends ChatPOA {
     
     }
 
-    // ### ping ###
-    public void ping(ChatCallback objref, String nickname) {
-	if(!(clients.containsKey(nickname))){
-	    clients.put(nickname, objref);
-	    objref.callback("\u001b[31;6mSomething has gone wrong, reconnecting... \u001b[0m" );
-	}
-    }
-
     // ### post ###
     public void post(ChatCallback objref, String nickname, String msg){
 	for (ChatCallback callback : clients.values()) {
@@ -63,8 +55,10 @@ class ChatImpl extends ChatPOA {
 	    catch(Exception e){
 		System.out.println("\u001b[31;1mLost connection to peer! \u001b[0m");
 		for(Iterator<Map.Entry<String,ChatCallback>>it = clients.entrySet().iterator(); it.hasNext(); ){
-		    Map.Entry<String, ChatCallback> entry = it.next();
-		    it.remove();
+		    if( clients.get(it.next()) == callback ) {
+			it.remove();
+			break;
+		    }
 		}
 	    }
 	    
@@ -90,8 +84,10 @@ class ChatImpl extends ChatPOA {
 	    catch(Exception e){
 		System.out.println("\u001b[31;1mLost connection to peer! \u001b[0m");
 		for(Iterator<Map.Entry<String,ChatCallback>>it = clients.entrySet().iterator(); it.hasNext(); ){
-		    Map.Entry<String, ChatCallback> entry = it.next();
-		    it.remove();
+		    if( clients.get(it.next()) == callback ) {
+			it.remove();
+			break;
+		    }
 		}
 	    }
 	}
