@@ -6,10 +6,6 @@ import org.omg.PortableServer.*;
 import org.omg.PortableServer.POA;
 import java.util.*;
 
-/*
-For each method Callbacking, add try-catch<client.remove> 
- */
-
 class ChatImpl extends ChatPOA {
   private ORB orb;
   Map<String, ChatCallback> clients = new HashMap<String, ChatCallback>();
@@ -18,7 +14,8 @@ class ChatImpl extends ChatPOA {
   public void setORB(ORB orb_val) {
     orb = orb_val;
   }
-  
+
+    // ### Join ###
     public String join(ChatCallback objref, String nickname){    
 	if(clients.containsKey(nickname)){
 	    objref.callback("\u001b[31;1m" + nickname + " is already an active chatter\u001b[0m");
@@ -29,6 +26,11 @@ class ChatImpl extends ChatPOA {
 		callback.callback("\u001b[33m" + nickname + " has joined!\u001b[0m"); // goes out to everyone
 	    }
 	    catch(Exception e){
+		/* 
+		   Well, dirty but ... 
+		   If we lose a peer, and subsequently can't callback to it,
+		   we reset the entry list and let the clients re-register with ping().
+		 */
 		System.out.println("\u001b[31;1mLost connection to peer! \u001b[0m");
 		for(Iterator<Map.Entry<String,ChatCallback>>it = clients.entrySet().iterator(); it.hasNext(); ){
 		    Map.Entry<String, ChatCallback> entry = it.next();
@@ -44,13 +46,15 @@ class ChatImpl extends ChatPOA {
     
     }
 
+    // ### ping ###
     public void ping(ChatCallback objref, String nickname) {
 	if(!(clients.containsKey(nickname))){
 	    clients.put(nickname, objref);
 	    objref.callback("\u001b[31;6mSomething has gone wrong, reconnecting... \u001b[0m" );
 	}
     }
-  
+
+    // ### post ###
     public void post(ChatCallback objref, String nickname, String msg){
 	for (ChatCallback callback : clients.values()) {
 	    try {
@@ -66,7 +70,8 @@ class ChatImpl extends ChatPOA {
 	    
 	}   
     }
-  
+
+    // ### list ###
     public void list(ChatCallback objref, String nickname){
 	objref.callback("\u001b[36mList of registered users: \u001b[0m");
        
@@ -75,6 +80,7 @@ class ChatImpl extends ChatPOA {
 	}
     }
 
+    // ### leave ###
     public void leave(ChatCallback objref, String nickname){
 	clients.remove(nickname); // remove post in hash
 	for (ChatCallback callback : clients.values()) {

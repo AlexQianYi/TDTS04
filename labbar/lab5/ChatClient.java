@@ -57,6 +57,7 @@ public class ChatClient {
 	    boolean Active = false;
 	    boolean Playing = false;
 
+	    // Welcome Message
 	    System.out.println("\u001b[32;1m\n" 
 			       + "Welcome to ShitShat!\n"
 			       + "Commands available: (shorts available with \\ , i.e. \\j to join)\n\u001b[0m"
@@ -67,15 +68,16 @@ public class ChatClient {
 			       + "lea(v)e                 \u001b[35mLeave chat \u001b[0m\n"
 			       + "(p)ut <coordinate XY>   \u001b[35mMake a move \u001b[0m\n"
 			       + "(q)uit                  \u001b[35mQuit ShitShat \u001b[0m\n");
-	    //leave
+
 	    while(true){
               
 		input = in.nextLine().split(" ");
 
-		if (Active) {
+		if (Active) { // Reconnect if server lost registry
 		    chatImpl.ping(cref, nickname);
 		}
 
+		// Join
 		if (input[0].equals("join") || input[0].equals("\\j")){
 		    if (input.length < 2){
 			System.out.println("\u001b[31;1m No name given at command line!\u001b[0m");
@@ -90,7 +92,8 @@ public class ChatClient {
 			System.out.println("\u001b[31;1mDon't join twice, " + nickname + "\u001b[0m");
 		    }
 		}
-    
+
+		// Post
 		if (input[0].equals("post") || input[0].equals("\\t")){
 		    if (Active){
 			String msg = "";
@@ -103,11 +106,13 @@ public class ChatClient {
 			System.out.println("\u001b[31;1mGo active first!\u001b[0m");
 		    }
 		}
-        
+
+		// List
 		if (input[0].equals("list") || input[0].equals("\\l")){
 		    chatImpl.list(cref, nickname );
 		}
-        
+
+		// Leave
 		if (input[0].equals("leave") || input[0].equals("\\v")){
 		    if (Active){
 			chatImpl.leave(cref, nickname);
@@ -123,6 +128,7 @@ public class ChatClient {
 		    }
 		}     
 
+		// Play
 		if(input[0].equals("play") || input[0].equals("\\a")){
 		    if (Active){
 			if (input.length > 1){
@@ -135,6 +141,8 @@ public class ChatClient {
 			System.out.println("\u001b[31;1mJoin first omg\u001b[0m");
 		    }
 		}
+
+		// Put
 		//Note-to-self: int (char(a)) == 97
 		if (input[0].equals("put") || input[0].equals("\\p")){
 		    if (Playing){
@@ -156,6 +164,7 @@ public class ChatClient {
 		    }
 		}
 
+		// Quit
 		if (input[0].equals("quit") || input[0].equals("\\q")){
 		    if (Active){
 			chatImpl.leave(cref, nickname);
