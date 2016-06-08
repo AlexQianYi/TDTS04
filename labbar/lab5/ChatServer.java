@@ -131,6 +131,11 @@ public class ChatServer {
 	    ChatImpl chatImpl = new ChatImpl();
 	    chatImpl.setORB(orb); 
 
+	    /* extra bit */
+	    GameImpl gameImpl = new GameImpl();
+	    gameImpl.setORB(orb);
+	    /* /extra bit */
+
 	    // get reference to rootpoa & activate the POAManager
 	    POA rootpoa = 
 		POAHelper.narrow(orb.resolve_initial_references("RootPOA"));  
@@ -146,10 +151,21 @@ public class ChatServer {
 		rootpoa.servant_to_reference(chatImpl);
 	    Chat cref = ChatHelper.narrow(ref);
 
+	    /* extra bit */
+	    ref = rootpoa.servant_to_reference(gameImpl); //Enough?
+	    Game gref = GameHelper.narrow(ref);
+	    /* /extra bit */
+
 	    // bind the object reference in naming
 	    String name = "Chat";
+	    String name2 = "Game";
 	    NameComponent path[] = ncRef.to_name(name);
 	    ncRef.rebind(path, cref);
+
+	    /* extra bit */
+	    NameComponent path2[] = ncRef.to_name(name2);
+	    ncRef.rebind(path2, gref);
+	    /* /extra bit */
 
 	    System.out.println("\u001b[32;1m\nChatServer ready and waiting ...\u001b[0m");
 	    

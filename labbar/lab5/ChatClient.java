@@ -21,6 +21,7 @@ class ChatCallbackImpl extends ChatCallbackPOA {
 
 public class ChatClient {
     static Chat chatImpl;
+    static Game gameImpl;
     
     public static void main(String args[]){
 	try {
@@ -30,6 +31,11 @@ public class ChatClient {
 	    // create servant (impl) and register it with the ORB
 	    ChatCallbackImpl chatCallbackImpl = new ChatCallbackImpl();
 	    chatCallbackImpl.setORB(orb);
+
+	    /* extra bit */
+	    GameCallbackImpl gameCallbackImpl = new GameCallbackImpl();
+	    gameCallbackImpl.setORB(orb);
+	    /* /extra bit */
 
 	    // get reference to RootPOA and activate the POAManager
 	    POA rootpoa = 
@@ -43,12 +49,19 @@ public class ChatClient {
 	    
 	    // resolve the object reference in naming
 	    String name = "Chat";
+	    String name2 = "Game";
 	    chatImpl = ChatHelper.narrow(ncRef.resolve_str(name));
-	    
+	    gameImpl = GameHelper.narrow(ncRef.resolve_str(name2));
+
 	    // obtain callback reference for registration w/ server
 	    org.omg.CORBA.Object ref = 
 		rootpoa.servant_to_reference(chatCallbackImpl);
 	    ChatCallback cref = ChatCallbackHelper.narrow(ref);
+
+	    /* extra bit */
+	    /* /extra bit */
+	    ref = rootpoa.servant_to_reference(gameCallbackImpl);
+	    GameCallback gref = GameCallbackHelper.narrow(ref);
         
 	    // Application code goes below
 	    String nickname = "";
@@ -108,14 +121,15 @@ public class ChatClient {
 		    chatImpl.list(cref, nickname );
 		}
 
-		// Leave
+		// Leave (game)
 		if (input[0].equals("leave") || input[0].equals("\\v")){
 		    if (Active){
 			chatImpl.leave(cref, nickname);
 			Active = false;
 
 			if (Playing){
-			    chatImpl.leaveGame(nickname); 
+			    gameImpl.leave(cref, nickname);
+			    //chatImpl.leaveGame(nickname); 
 			    Playing = false;
 			}
 		    }
@@ -124,12 +138,13 @@ public class ChatClient {
 		    }
 		}     
 
-		// Play
+		// Play (game)
 		if(input[0].equals("play") || input[0].equals("\\a")){
 		    if (Active){
 			if (input.length > 1){
 			    String color = input[1].substring(0,1);
-			    chatImpl.play(cref, nickname, color);
+			    //chatImpl.play(cref, nickname, color);
+			    gameImpl.join(cref, gref, nickname, color);
 			    Playing = true;
 			}
 		    }
@@ -138,14 +153,15 @@ public class ChatClient {
 		    }
 		}
 
-		// Put
+		// Put (game)
 		//Note-to-self: int (char(a)) == 97
 		if (input[0].equals("put") || input[0].equals("\\p")){
 		    if (Playing){
 			if (input.length > 1){
 			    String pos = input[1];
 			    if (pos.matches("([a-h]|[A-H])+([1-8])")){ // Om vi bara vill tillåta a-h, ta bort |[A-H]
-				chatImpl.put(cref, nickname, pos);
+				//chatImpl.put(cref, nickname, pos);
+				gameImpl.makemove(cref, nickname, pos);
 			    }
 			    else{
 				System.out.println("\u001b[31;1mSyntax: \"put [a-h][1-8]\", i.e. \"put a3\"\u001b[0m");
