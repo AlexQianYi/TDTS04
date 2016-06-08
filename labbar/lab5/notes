@@ -18,4 +18,5 @@ NickSays 34;1 : 0
 # onsdag 8 jun 2016, notes kvar:
 
 # Kommandon för gameImpl: list, passturn, reset
+# void boardupdate(in char[][] gb) //passing an array maybe not so good? Make a class GameBoard with one member char[][] gameboard? (init and stuff?)
 # "(Om tid över: ny undantagsklass)" ???

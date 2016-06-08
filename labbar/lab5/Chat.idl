@@ -16,11 +16,11 @@ module ChatApp {
     void boardupdate(in char[][] gb);
   };
   interface Game {
-    boolean join(in ChatCallback chatref, in GameCallback gbref, in String nickname, in char colour);
-    boolean makemove(in ChatCallback chatref, in String nickname, in String move);
+    boolean join(in ChatCallback chatref, in GameCallback gbref, in string nickname, in char colour);
+    boolean makemove(in ChatCallback chatref, in string nickname, in string move);
     void passturn();
     void list(in ChatCallback chatref);
-    void leave(in ChatCallback chatref, in String nickname);
+    void leave(in ChatCallback chatref, in string nickname);
     void reset();
 
   };
