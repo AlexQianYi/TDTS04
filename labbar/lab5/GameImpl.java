@@ -55,7 +55,7 @@ class GameImpl extends GamePOA
 		    client.callback("Joined Othello.");
 	    }
 	    //Send gameboard data to player 
-	    gbref.boardupdate(gameBoard);
+	    gbref.boardupdate( gbStringify() );
 	    return true;
 	}
     }
@@ -92,7 +92,7 @@ class GameImpl extends GamePOA
 
 	//Update client gameboards
 	for (GameCallback gbref : clients.values()) {
-	    gbref.boardupdate(gameBoard);
+	    gbref.boardupdate( gbStringify() );
 	}
   
 	return true;
@@ -176,6 +176,18 @@ class GameImpl extends GamePOA
 	}
     }
     
+    private String gbStringify()
+    {
+	String retString;
+
+	for (int i = 0 ; i < maxX ; ++i) {
+	    for (int j = 0 ; j < maxY ; ++j) {
+		retString = retString + gameBoard[i][j];
+	    }
+	}
+	return retString;
+    }
+
     private boolean inbounds(int x, int y)
     {
 	return (x >= 0 &&

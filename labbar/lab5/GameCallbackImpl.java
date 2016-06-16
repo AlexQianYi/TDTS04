@@ -38,11 +38,11 @@ class GameCallbackImpl extends GameCallbackPOA
 	gbGUI = null;
     }
 
-    public void boardupdate(char[][] gb)
+    public void boardupdate(String gbstate)
     {
 	for (int i = 0 ; i < maxX ; ++i) {
 	    for (int j = 0 ; j < maxY ; ++j) {
-		mirrored_gameBoard[i][j] = gb[i][j];
+		mirrored_gameBoard[i][j] = gbstate.charAt(j + i*8);
 	    }
 	}
 	renderboard();
@@ -50,7 +50,7 @@ class GameCallbackImpl extends GameCallbackPOA
 
     private void renderboard()
     {
-	gbGUI.setText(null);
+	gbGUI.clear();
 	gbGUI.println("  | a b c d e f g h |");
 	gbGUI.println("__|_________________|__");
 

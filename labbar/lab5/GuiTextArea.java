@@ -35,4 +35,8 @@ public class GuiTextArea {
     public void println(String s) { print(s+"\n"); }
     public void println()         { print("\n"); }
 
+    public void clear() {
+	myArea.setText(null);
+    }
+
 }
