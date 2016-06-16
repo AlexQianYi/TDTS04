@@ -8,9 +8,9 @@ module ChatApp {
     void list(in ChatCallback objref, in string nickname);
     void leave(in ChatCallback objref, in string nickname);
    
-    void play(in ChatCallback objref, in string nickname, in char color);
-    void put(in ChatCallback objref, in string nickname, in string pos);   
-    void leaveGame( in string nickname);
+    //void play(in ChatCallback objref, in string nickname, in char color);
+    //void put(in ChatCallback objref, in string nickname, in string pos);   
+    //void leaveGame( in string nickname);
   };
   interface GameCallback {
     void boardupdate(in string gbstate);

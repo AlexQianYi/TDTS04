@@ -16,7 +16,7 @@ class GameImpl extends GamePOA
     private static final int maxY = 8; // H
     
     private Map<String, GameCallback> clients = new HashMap<String, GameCallback>(); //Linking player to client GB
-    private Map<String, char> players = new HashMap<String, char>(); //Linking player to a colour
+    private Map<String, String> players = new HashMap<String, String>(); //Linking player to a colour
     private char[][] gameBoard = new char[maxX][maxY];
     private boolean[][] legalMoves = new boolean[maxX][maxY];
     private char activeColour;
@@ -45,8 +45,11 @@ class GameImpl extends GamePOA
 	    return false;
 	}
 	else {
+	    String colourString = new String();
+	    colourString.valueOf(colour);
+
 	    clients.put(nickname, gbref);
-	    players.put(nickname, colour);
+	    players.put(nickname, colourString);
 	    //Announce
 	    for (ChatCallback client : chatImpl.clients.values()) {
 		if (client != chatref)
@@ -62,13 +65,13 @@ class GameImpl extends GamePOA
 
     public boolean makemove(ChatCallback chatref, String nickname, String move)
     {
-	if (players.get(nickname) != activeColour) {
+	if (players.get(nickname).charAt(0) != activeColour) {
 	    chatref.callback("It's not your turn.");
 	    return false;
 	}
 	
-	int x = move[0] - 97; //int(char('a')) == 97
-	int y = move[1] - 1;  //1 to 8 --> 0 to 7
+	int x = move.charAt(0) - 97; //int(char('a')) == 97
+	int y = move.charAt(1) - 1;  //1 to 8 --> 0 to 7
 
 	if (!inbounds(x, y)) {
 	    chatref.callback("Out of bounds.");
@@ -111,13 +114,13 @@ class GameImpl extends GamePOA
     {	
 	Set<String> playersSet = players.keySet();
 	Iterator<String> it = playersSet.iterator();
-	Vector<String> teamx;
-	Vector<String> teamo;
+	Vector<String> teamx = new Vector();
+	Vector<String> teamo = new Vector();
 	String temp;
 	
 	while (it.hasNext()) {
 	    temp = it.next();
-	    if (players(temp) == 'x')
+	    if (players.get(temp).charAt(0) == 'x')
 		teamx.add(temp);
 	    else
 		teamo.add(temp);
@@ -149,15 +152,12 @@ class GameImpl extends GamePOA
     {
 	if (manReset == true) {
 	    for (ChatCallback client : chatImpl.clients.values()) {
-		if (client != chatref)
-		    client.callback("\u001b[31;1m" + nickname + " reset the gameboard.\u001b[0m");
-		else
-		    client.callback("\u001b[31;1m You reset the gameboard.\u001b[0m");
+		    client.callback("\u001b[31;1m The gameboard was manually reset.\u001b[0m");
 	    }
 	}
 	//Reset pieces.
 	for (char[] column : gameBoard){
-	    Arrays.fill(column, ".");
+	    Arrays.fill(column, '.');
 	}
 	gameBoard[3][3] = 'x';
 	gameBoard[3][4] = 'o';
@@ -172,13 +172,13 @@ class GameImpl extends GamePOA
 
 	//Update client gameboards
 	for (GameCallback gbref : clients.values()) {
-	    gbref.boardupdate(gameBoard);
+	    gbref.boardupdate( gbStringify() );
 	}
     }
     
     private String gbStringify()
     {
-	String retString;
+	String retString = new String();
 
 	for (int i = 0 ; i < maxX ; ++i) {
 	    for (int j = 0 ; j < maxY ; ++j) {
@@ -218,11 +218,11 @@ class GameImpl extends GamePOA
 				//Opposing piece found in neighbouring square, direction (i,j).
 				for (int n = 1 ; inbounds(x+n*i, y+n*j) ; ++n) {
 				    //Check if consecutive line of opposing piece can be made in direction (i,j) to a friendly piece.
-				    if (gameboard[x+n*i][y+n*j] == opposingColour)
+				    if (gameBoard[x+n*i][y+n*j] == opposingColour)
 					continue;
-				    if (gameboard[x+n*i][y+n*j] == '.')
+				    if (gameBoard[x+n*i][y+n*j] == '.')
 					break;
-				    if (gameboard[x+n*i][y+n*j] == activeColour) {
+				    if (gameBoard[x+n*i][y+n*j] == activeColour) {
 					//Sequence of o x ... x o or vice versa found. (x,y) is a legal move.
 					legalMoves[x][y] = true;
 					break outerloop;
@@ -247,11 +247,11 @@ class GameImpl extends GamePOA
 			//Opposing piece found in neighbouring square, direction (i,j).
 			for (int n = 1 ; inbounds(x+n*i, y+n*j) ; ++n) {
 			    //Check if consecutive line of opposing piece can be made in direction (i,j) to a friendly piece.
-			    if (gameboard[x+n*i][y+n*j] == opposingColour)
+			    if (gameBoard[x+n*i][y+n*j] == opposingColour)
 				continue;
-			    if (gameboard[x+n*i][y+n*j] == '.')
+			    if (gameBoard[x+n*i][y+n*j] == '.')
 				break;
-			    if (gameboard[x+n*i][y+n*j] == activeColour) {
+			    if (gameBoard[x+n*i][y+n*j] == activeColour) {
 				//Sequence of o x ... x o or vice versa found. Flip pieces.
 				for (int m = 1 ; m < n ; ++m) {
 				    gameBoard[x+m*i][y+m*j] = activeColour;

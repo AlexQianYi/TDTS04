@@ -9,7 +9,7 @@ import java.util.*;
 class ChatImpl extends ChatPOA {
   private ORB orb;
   Map<String, ChatCallback> clients = new HashMap<String, ChatCallback>();
-      Game game = new Game();
+    // Game game = new Game();
   
   public void setORB(ORB orb_val) {
     orb = orb_val;
@@ -132,7 +132,7 @@ public class ChatServer {
 	    chatImpl.setORB(orb); 
 
 	    /* extra bit */
-	    GameImpl gameImpl = new GameImpl();
+	    GameImpl gameImpl = new GameImpl(chatImpl);
 	    gameImpl.setORB(orb);
 	    /* /extra bit */
 
