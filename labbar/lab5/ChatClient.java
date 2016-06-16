@@ -79,6 +79,7 @@ public class ChatClient {
 			       + "(l)ist                  \u001b[35mList connected users \u001b[0m\n"
 			       + "pl(a)y <color>          \u001b[35mPlay game \u001b[0m\n"
 			       + "pass(t)urn              \u001b[35mPass turn in-game\u001b[0m\n"
+			       + "(g)list                 \u001b[35mList connected players \u001b[0m\n"
 			       + "reset                   \u001b[35mReset the game board\u001b[0m\n"
 			       + "lea(v)e                 \u001b[35mLeave chat \u001b[0m\n"
 			       + "(p)ut <coordinate XY>   \u001b[35mMake a move \u001b[0m\n"
@@ -120,8 +121,12 @@ public class ChatClient {
 
 		// List
 		if (input[0].equals("list") || input[0].equals("\\l")){
+		    chatImpl.list(cref, nickname );
+		}
+
+		// List (game)
+		if (input[0].equals("glist") || input[0].equals("\\g")){
 		    gameImpl.list(cref);
-		    //chatImpl.list(cref, nickname );
 		}
 
 		// Leave (game)
@@ -182,12 +187,13 @@ public class ChatClient {
 		//Pass Turn
 		if (input[0].equals("passturn") || input[0].equals("\\t")) {
 		    System.out.println("\u001b[36mPassed turn!\u001b[0m");
-		    gameImpl.turn_change_ao;
+		    gameImpl.passturn();
 		}
 
 		//Reset
 		if (input[0].equals("reset")) {
-		    gameImpl.reset;
+		    boolean manReset = true;
+		    gameImpl.reset(manReset);
 		}
 		
 		// Quit
