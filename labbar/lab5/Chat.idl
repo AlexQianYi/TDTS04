@@ -21,7 +21,7 @@ module ChatApp {
     void passturn();
     void list(in ChatCallback chatref);
     void leave(in ChatCallback chatref, in string nickname);
-    void reset();
+    void reset(in boolean manReset);
 
   };
 };

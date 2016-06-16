@@ -26,7 +26,8 @@ class GameImpl extends GamePOA
     public GameImpl(ChatImpl chatImpl)
     {
 	this.chatImpl = chatImpl;
-	reset();
+	boolean manReset = false;
+	reset(manReset);
     }
 
 
@@ -144,8 +145,16 @@ class GameImpl extends GamePOA
 	}
     }
 	
-    public void reset()
+    public void reset(boolean manReset)
     {
+	if (manReset == true) {
+	    for (ChatCallback client : chatImpl.clients.values()) {
+		if (client != chatref)
+		    client.callback("\u001b[31;1m" + nickname + " reset the gameboard.\u001b[0m");
+		else
+		    client.callback("\u001b[31;1m You reset the gameboard.\u001b[0m");
+	    }
+	}
 	//Reset pieces.
 	for (char[] column : gameBoard){
 	    Arrays.fill(column, ".");
