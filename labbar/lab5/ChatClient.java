@@ -78,7 +78,7 @@ public class ChatClient {
 			       + "pos(t) <msg>            \u001b[35mPost to chat \u001b[0m\n"
 			       + "(l)ist                  \u001b[35mList connected users \u001b[0m\n"
 			       + "pl(a)y <color>          \u001b[35mPlay game \u001b[0m\n"
-			       + "pass (t)urn             \u001b[35mPass turn in-game\u001b[0m\n"
+			       + "pass(t)urn              \u001b[35mPass turn in-game\u001b[0m\n"
 			       + "reset                   \u001b[35mReset the game board\u001b[0m\n"
 			       + "lea(v)e                 \u001b[35mLeave chat \u001b[0m\n"
 			       + "(p)ut <coordinate XY>   \u001b[35mMake a move \u001b[0m\n"
@@ -180,11 +180,15 @@ public class ChatClient {
 		}
 
 		//Pass Turn
-		System.out.println("\u001b[36mPassed turn!\u001b[0m");
-		gameImpl.turn_change_ao;
+		if (input[0].equals("passturn") || input[0].equals("\\t")) {
+		    System.out.println("\u001b[36mPassed turn!\u001b[0m");
+		    gameImpl.turn_change_ao;
+		}
 
 		//Reset
-		gameImpl.reset;
+		if (input[0].equals("reset")) {
+		    gameImpl.reset;
+		}
 		
 		// Quit
 		if (input[0].equals("quit") || input[0].equals("\\q")){
