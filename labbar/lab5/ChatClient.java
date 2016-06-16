@@ -145,7 +145,7 @@ public class ChatClient {
 		if(input[0].equals("play") || input[0].equals("\\a")){
 		    if (Active){
 			if (input.length > 1){
-			    String color = input[1].substring(0,1);
+			    char color = input[1].substring(0,1);
 			    //chatImpl.play(cref, nickname, color);
 			    gameImpl.join(cref, gref, nickname, color);
 			    Playing = true;
