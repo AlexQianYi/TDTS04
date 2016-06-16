@@ -49,8 +49,8 @@ public class ChatClient {
 	    
 	    // resolve the object reference in naming
 	    String name = "Chat";
-	    String name2 = "Game";
 	    chatImpl = ChatHelper.narrow(ncRef.resolve_str(name));
+	    String name2 = "Game";
 	    gameImpl = GameHelper.narrow(ncRef.resolve_str(name2));
 
 	    // obtain callback reference for registration w/ server
@@ -78,7 +78,7 @@ public class ChatClient {
 			       + "pos(t) <msg>            \u001b[35mPost to chat \u001b[0m\n"
 			       + "(l)ist                  \u001b[35mList connected users \u001b[0m\n"
 			       + "pl(a)y <color>          \u001b[35mPlay game \u001b[0m\n"
-			       + "pass(t)urn              \u001b[35mPass turn in-game\u001b[0m\n"
+			       + "passtur(n)              \u001b[35mPass turn in-game\u001b[0m\n"
 			       + "(g)list                 \u001b[35mList connected players \u001b[0m\n"
 			       + "reset                   \u001b[35mReset the game board\u001b[0m\n"
 			       + "lea(v)e                 \u001b[35mLeave chat \u001b[0m\n"
@@ -185,7 +185,7 @@ public class ChatClient {
 		}
 
 		//Pass Turn
-		if (input[0].equals("passturn") || input[0].equals("\\t")) {
+		if (input[0].equals("passturn") || input[0].equals("\\n")) {
 		    System.out.println("\u001b[36mPassed turn!\u001b[0m");
 		    gameImpl.passturn();
 		}

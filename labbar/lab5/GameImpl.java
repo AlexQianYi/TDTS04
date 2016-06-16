@@ -26,6 +26,7 @@ class GameImpl extends GamePOA
     public GameImpl(ChatImpl chatImpl)
     {
 	this.chatImpl = chatImpl;
+	
 	boolean manReset = false;
 	reset(manReset);
     }
@@ -58,6 +59,7 @@ class GameImpl extends GamePOA
 		    client.callback("Joined Othello.");
 	    }
 	    //Send gameboard data to player 
+	    gbref.startgame(nickname, colour);
 	    gbref.boardupdate( gbStringify() );
 	    return true;
 	}
@@ -138,6 +140,7 @@ class GameImpl extends GamePOA
 
     public void leave(ChatCallback chatref, String nickname)
     {
+	
         clients.remove(nickname);
 	players.remove(nickname);
 	for (ChatCallback client : chatImpl.clients.values()) {
@@ -164,7 +167,7 @@ class GameImpl extends GamePOA
 	gameBoard[4][3] = 'o';
 	gameBoard[4][4] = 'x';
  
-	//x is first to act.
+	//x is first to act. 'x' and 'o' becomes default colours. 
 	turn_change_ao('x', 'o');
 
 	//Calculate legal moves for next turn.
@@ -208,12 +211,16 @@ class GameImpl extends GamePOA
 	    for (int y = 0; y < maxY ; ++y) {
 		//(x,y) is illegal until we prove it's not.
 		legalMoves[x][y] = false;
+		
+		//Check that (x,y) is empty
+		if (gameBoard[x][y] != '.')
+		    continue;
 
 		//Check all immediate neighbouring squares (x+i,y+j).
 		outerloop:
 		for (int i = -1 ; i < 2 ; ++i) {
 		    for (int j = -1 ; j < 2 ; ++j) {
-			if (inbounds(x+i, y+j)) {
+			if (inbounds(x+i, y+j) && !(i == 0 && j == 0)) {
 			    if (gameBoard[x+i][y+j] == opposingColour) {
 				//Opposing piece found in neighbouring square, direction (i,j).
 				for (int n = 1 ; inbounds(x+n*i, y+n*j) ; ++n) {

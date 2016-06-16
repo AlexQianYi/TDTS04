@@ -152,8 +152,9 @@ public class ChatServer {
 	    Chat cref = ChatHelper.narrow(ref);
 
 	    /* extra bit */
-	    ref = rootpoa.servant_to_reference(gameImpl); //Enough?
-	    Game gref = GameHelper.narrow(ref);
+	    org.omg.CORBA.Object ref2 =
+		rootpoa.servant_to_reference(gameImpl); //Enough?
+	    Game gref = GameHelper.narrow(ref2);
 	    /* /extra bit */
 
 	    // bind the object reference in naming
