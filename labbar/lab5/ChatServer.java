@@ -21,23 +21,15 @@ class ChatImpl extends ChatPOA {
 	    objref.callback("\u001b[31;1m" + nickname + " is already an active chatter\u001b[0m");
 	    return "active";
 	}
-	for (ChatCallback callback : clients.values()) {
+	for (Map.Entry<String,ChatCallback> eent : clients.entrySet()) {
 	    try {
-		callback.callback("\u001b[33m" + nickname + " has joined!\u001b[0m"); // goes out to everyone
+		eent.getValue().callback("\u001b[33m" + nickname + " has joined!\u001b[0m"); // goes out to everyone
 	    }
 	    catch(Exception e){
-		/* 
-		   Remove zombie peers
-		 */
-		System.out.println("\u001b[31;1mLost connection to peer! \u001b[0m");
-		for(Iterator<Map.Entry<String,ChatCallback>> it = clients.entrySet().iterator(); it.hasNext(); ){
-		    if( clients.get(it.next()) == callback ) {
-			it.remove();
-			break;
-		    }
-		}
-		
-	    }
+		/* Remove zombie peers */
+		System.out.println("\u001b[31;1mLost connection to peer " + eent.getKey() + "! \u001b[0m");
+		clients.remove(eent.getKey());
+	    }       
 	}
     
 	objref.callback("\u001b[36mWelcome " + nickname + "!\u001b[0m");
@@ -48,20 +40,15 @@ class ChatImpl extends ChatPOA {
 
     // ### post ###
     public void post(ChatCallback objref, String nickname, String msg){
-	for (ChatCallback callback : clients.values()) {
+	for (Map.Entry<String,ChatCallback> eent : clients.entrySet()) {
 	    try {
-		callback.callback("\u001b[34;1m" + nickname + ":\u001b[0m" + msg);
+		eent.getValue().callback("\u001b[34;1m" + nickname + ":\u001b[0m" + msg);
 	    }
 	    catch(Exception e){
-		System.out.println("\u001b[31;1mLost connection to peer! \u001b[0m");
-		for(Iterator<Map.Entry<String,ChatCallback>>it = clients.entrySet().iterator(); it.hasNext(); ){
-		    if( clients.get(it.next()) == callback ) {
-			it.remove();
-			break;
-		    }
-		}
-	    }
-	    
+		/* Remove zombie peers */
+		System.out.println("\u001b[31;1mLost connection to peer " + eent.getKey() + "! \u001b[0m");
+		clients.remove(eent.getKey());
+	    }       	    
 	}   
     }
 
@@ -77,19 +64,15 @@ class ChatImpl extends ChatPOA {
     // ### leave ###
     public void leave(ChatCallback objref, String nickname){
 	clients.remove(nickname); // remove post in hash
-	for (ChatCallback callback : clients.values()) {
+	for (Map.Entry<String,ChatCallback> eent : clients.entrySet()) {
 	    try {
-		callback.callback("\u001b[33m" + nickname + " has left.\u001b[0m"); // broadcast message
+		eent.getValue().callback("\u001b[33m" + nickname + " has left.\u001b[0m"); // broadcast message
 	    }
 	    catch(Exception e){
-		System.out.println("\u001b[31;1mLost connection to peer! \u001b[0m");
-		for(Iterator<Map.Entry<String,ChatCallback>>it = clients.entrySet().iterator(); it.hasNext(); ){
-		    if( clients.get(it.next()) == callback ) {
-			it.remove();
-			break;
-		    }
-		}
-	    }
+		/* Remove zombie peers */
+		System.out.println("\u001b[31;1mLost connection to peer " + eent.getKey() + "! \u001b[0m");
+		clients.remove(eent.getKey());
+	    }       
 	}
 	
 	objref.callback("Cheers " + nickname);

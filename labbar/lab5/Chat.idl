@@ -14,13 +14,15 @@ module ChatApp {
   };
   interface GameCallback {
     void boardupdate(in string gbstate);
+    void startgame(in string nickname, in char colour);
+    void closegame();
   };
   interface Game {
     boolean join(in ChatCallback chatref, in GameCallback gbref, in string nickname, in char colour);
     boolean makemove(in ChatCallback chatref, in string nickname, in string move);
     void passturn();
     void list(in ChatCallback chatref);
-    void leave(in ChatCallback chatref, in string nickname);
+    void leave(in ChatCallback chatref, in GameCallback gbref, in string nickname);
     void reset(in boolean manReset);
 
   };

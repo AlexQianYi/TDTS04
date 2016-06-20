@@ -96,8 +96,9 @@ public class ChatClient {
 		    }
 		    else if (!Active){
 			nickname = chatImpl.join(cref, input[1]);
-			if (!(nickname.equals("active"))){
-			    Active = true;
+			Active = true;
+			if (nickname.equals("active")){
+			    Active = false;
 			}
 		    }
 		    else{
@@ -136,7 +137,7 @@ public class ChatClient {
 			Active = false;
 
 			if (Playing){
-			    gameImpl.leave(cref, nickname);
+			    gameImpl.leave(cref, gref, nickname);
 			    //chatImpl.leaveGame(nickname); 
 			    Playing = false;
 			}
@@ -168,7 +169,6 @@ public class ChatClient {
 			if (input.length > 1){
 			    String pos = input[1];
 			    if (pos.matches("([a-h]|[A-H])+([1-8])")){ // Om vi bara vill tillåta a-h, ta bort |[A-H]
-				//chatImpl.put(cref, nickname, pos);
 				gameImpl.makemove(cref, nickname, pos);
 			    }
 			    else{
