@@ -46,15 +46,16 @@ class GameImpl extends GamePOA
 	    return false;
 	}
 	else {
-	    String colourString = new String();
-	    colourString.valueOf(colour);
+	    String colourString = String.valueOf(colour);
+
+	    System.out.println(colourString);
 
 	    clients.put(nickname, gbref);
 	    players.put(nickname, colourString);
 	    //Announce
 	    for (ChatCallback client : chatImpl.clients.values()) {
 		if (client != chatref)
-		    client.callback(nickname + " is now playing Othello on team " + colour  + "!");
+		    client.callback(nickname + " is now playing Othello on team " + colourString + "!");
 		else
 		    client.callback("Joined Othello.");
 	    }
@@ -67,11 +68,17 @@ class GameImpl extends GamePOA
 
     public boolean makemove(ChatCallback chatref, String nickname, String move)
     {
+	System.out.println("makemove1");
+
+	System.out.println(players.get(nickname));
+
 	if (players.get(nickname).charAt(0) != activeColour) {
 	    chatref.callback("It's not your turn.");
 	    return false;
 	}
-	
+
+       	System.out.println("makemove2");
+
 	int x = move.charAt(0) - 97; //int(char('a')) == 97
 	int y = move.charAt(1) - 1;  //1 to 8 --> 0 to 7
 
@@ -79,6 +86,8 @@ class GameImpl extends GamePOA
 	    chatref.callback("Out of bounds.");
 	    return false;
 	}
+
+	System.out.println("makemove3");
 
 	if (legalMoves[x][y] == false) {
 	    chatref.callback("You can't make that move.");
@@ -138,9 +147,9 @@ class GameImpl extends GamePOA
 	    chatref.callback(player);	
     }
 
-    public void leave(ChatCallback chatref, String nickname)
+    public void leave(ChatCallback chatref, GameCallback gbref, String nickname)
     {
-	
+	gbref.closegame();
         clients.remove(nickname);
 	players.remove(nickname);
 	for (ChatCallback client : chatImpl.clients.values()) {
