@@ -80,7 +80,7 @@ class GameImpl extends GamePOA
        	System.out.println("makemove2");
 
 	int x = move.charAt(0) - 97; //int(char('a')) == 97
-	int y = move.charAt(1) - 1;  //1 to 8 --> 0 to 7
+	int y = move.charAt(1) - 49;  //1 to 8 --> 0 to 7
 
 	if (!inbounds(x, y)) {
 	    chatref.callback("Out of bounds.");

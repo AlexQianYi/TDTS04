@@ -9,7 +9,6 @@ import java.util.*;
 class ChatImpl extends ChatPOA {
   private ORB orb;
   Map<String, ChatCallback> clients = new HashMap<String, ChatCallback>();
-    // Game game = new Game();
   
   public void setORB(ORB orb_val) {
     orb = orb_val;
@@ -77,31 +76,6 @@ class ChatImpl extends ChatPOA {
 	
 	objref.callback("Cheers " + nickname);
     }
-
-    // Game stuff, yet to be fixed omg!
-    /*
-    public void play(ChatCallback objref, String nickname, char color){
-	game.join(objref, nickname, color);
-    }
-
-    public void put(ChatCallback objref, String nickname, String pos){
-	game.put(objref, nickname, pos); 
-    }
-
-    public void leaveGame(String nickname){
-	game.leave(nickname);
-    }
-
-    /*
-    public voic pass(String nickname){
-	game.pass(nickname);
-    }
-
-    public void reset() {
-        game.reset();
-    }
-
-    */
 }
 
 public class ChatServer {

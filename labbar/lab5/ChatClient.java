@@ -59,7 +59,6 @@ public class ChatClient {
 	    ChatCallback cref = ChatCallbackHelper.narrow(ref);
 
 	    /* extra bit */
-	    /* /extra bit */
 	    ref = rootpoa.servant_to_reference(gameCallbackImpl);
 	    GameCallback gref = GameCallbackHelper.narrow(ref);
         
@@ -138,7 +137,6 @@ public class ChatClient {
 
 			if (Playing){
 			    gameImpl.leave(cref, gref, nickname);
-			    //chatImpl.leaveGame(nickname); 
 			    Playing = false;
 			}
 		    }
@@ -152,7 +150,6 @@ public class ChatClient {
 		    if (Active){
 			if (input.length > 1){
 			    char color = input[1].charAt(0);
-			    //chatImpl.play(cref, nickname, color);
 			    gameImpl.join(cref, gref, nickname, color);
 			    Playing = true;
 			}
