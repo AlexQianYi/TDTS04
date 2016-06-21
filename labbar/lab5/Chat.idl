@@ -1,3 +1,6 @@
+/*****************************************
+Chat.idl
+*****************************************/
 module ChatApp {
   interface ChatCallback {
     void callback(in string message);

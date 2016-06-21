@@ -1,3 +1,6 @@
+/*****************************************
+GameImpl.java
+*****************************************/
 import ChatApp.*; 
 import org.omg.CosNaming.*; // HelloServer will use the naming service. 
 import org.omg.CosNaming.NamingContextPackage.*; // ..for exceptions. 

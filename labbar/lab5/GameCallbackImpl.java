@@ -1,3 +1,6 @@
+/*****************************************
+GameCallbackImpl.java
+*****************************************/
 import ChatApp.*; 
 import org.omg.CosNaming.*; // HelloServer will use the naming service. 
 import org.omg.CosNaming.NamingContextPackage.*; // ..for exceptions. 
@@ -5,7 +8,6 @@ import org.omg.CORBA.*;     // All CORBA applications need these classes.
 import org.omg.PortableServer.*;   
 import org.omg.PortableServer.POA;
 import java.util.*;
-
 
 class GameCallbackImpl extends GameCallbackPOA
 {

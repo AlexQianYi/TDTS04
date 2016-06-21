@@ -1,3 +1,6 @@
+/*****************************************
+ChatClient.java
+*****************************************/
 import ChatApp.*;          // The package containing our stubs
 import org.omg.CosNaming.*; // HelloClient will use the naming service.
 import org.omg.CosNaming.NamingContextPackage.*;
@@ -165,7 +168,7 @@ public class ChatClient {
 		    if (Playing){
 			if (input.length > 1){
 			    String pos = input[1];
-			    if (pos.matches("([a-h]|[A-H])+([1-8])")){ // Om vi bara vill tillåta a-h, ta bort |[A-H]
+			    if (pos.matches("([a-h]|[A-H])+([1-8])")){
 				gameImpl.makemove(cref, nickname, pos);
 			    }
 			    else{

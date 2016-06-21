@@ -1,3 +1,6 @@
+/*****************************************
+ChatServer.java
+*****************************************/
 import ChatApp.*;          // The package containing our stubs. 
 import org.omg.CosNaming.*; // HelloServer will use the naming service. 
 import org.omg.CosNaming.NamingContextPackage.*; // ..for exceptions. 
