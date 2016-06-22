@@ -1,8 +1,18 @@
 Report hand-ins:
 
 * Questions (1) - reference documents online
+The name server has the purpose of mediating between the clients and the ORBs asynchronously. The largest benefit is of course the security aspect. The objects only can be interacted with by going through the nameserver, making it difficult to distort the data within, and allowing us to interact with other users' ORBs indirectly only.
+
 * Questions (2) - reference documents online (Polling vs Callback)
-* Code printout and emailed
+
 * Brief explanation of chat implementation
+Our lab chat is based on two parts plus the game implementation, the latter further described later.
+First we have the chat server. It acts as a mediator between the clients and the ORB server. It is only slightly modified from the provided one, adding <join>, <post>, <leave>, and <list> command support and maintaining a list of connected users. When either are called from a connected chat client, it calls to connected clients' respective ORBs. In addition, for each such call it removes any linkdead peers.
+The client has been extended with registering of game ORBs and the chat interface. From the source code, it should be quite self-explanatory how the input is handled (line-based, interpreting the input and passing relevant calls and data to the chat server so that it can interact with the relevant ORBs).
+
 * Brief explanation of game implementation
+
 * Kinks during design and implementation
+The chat was fairly straight-forward implementation-wise. The largest issues to overcome was language-related rather than "problem-solving", as well as some minor programmer-logic-related bugs.
+
+* Code printout and emailed
