@@ -11,7 +11,21 @@ First we have the chat server. It acts as a mediator between the clients and the
 The client has been extended with registering of game ORBs and the chat interface. From the source code, it should be quite self-explanatory how the input is handled (line-based, interpreting the input and passing relevant calls and data to the chat server so that it can interact with the relevant ORBs).
 
 * Brief explanation of game implementation
+The Othello game uses the same basic remote object structure, slightly veiling the server-client  relation, as the chat. However, to join the (the current implementation supports one gameboard for the server) Othello game, one must first be part of the chat. A client that joins the ongoing game will open up a JTextArea window that will draw the gameboard state and update via game-global callbacks everytime it changes. The server also uses callback functions when confirming a client joining (also replying nickname and colour) or exiting the game session.
 
+A game is inherently connected to a (the) chat, allowing the game entity to use the chat callback function for chat feedback. This feedback is currently limited, but small changes easily allow for more verbose and informing server responses.
+
+As per the Chat.idl interface, a client can request to "join", "make move", "pass turn", acquire game "list", "leave" and "reset" the gameboard. In the current implementation, the client (chat command interface to be specific) is mainly responsible for the checks that make sure it is chatting before playing, and playing before accessing the different "game" commands. As noted above, server responds to the client via callback functions: "board update", "start game" and "close game".
+
+Othello functionalities and limitations:
+
+* The game supports an in practice unlimited amount of players on either team.
+* Client checks for sensible player move input, while the server doubles down on this with the addition of stricter checks.
+* Legal moves are pre-calculated according to Othello rules any time the gameboard state changes (turn, table pieces).
+* Gameboard persists through a server session, but can be manually reset.
+* The calculation of legal moves, flipping affected table pieces and turn change on move, are all performed automatically.
+* Victory conditions and (non-)forced turn passes are not automatic.
+* Players are subject to trolling, due to accessibility of a gameboard reset, and a "first come, first serve" policy for playing table pieces.
 * Kinks during design and implementation
 The chat was fairly straight-forward implementation-wise. The largest issues to overcome was language-related rather than "problem-solving", as well as some minor programmer-logic-related bugs.
 
